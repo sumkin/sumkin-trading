@@ -10,8 +10,8 @@ from universe import Universe
 class MACrossoverStrategy(Strategy):
     FAST_PERIOD = 9
     SLOW_PERIOD = 21
-    SL = 0.02
-    TP = 0.04
+    SL = 0.03
+    TP = 0.09
 
     def init(self):
         self.data.df["fast_ma"] = self.data.df["Close"].ewm(span=MACrossoverStrategy.FAST_PERIOD).mean().values

@@ -16,6 +16,9 @@ def optimize_sl_tp():
 
     tickers = Universe().get_tickers()
 
+    max_sl = None
+    max_tp = None
+    max_win_rate = -np.inf
     for sl in np.arange(0.01, 0.1, 0.01):
         for tp in np.arange(0.01, 0.1, 0.01):
             def process(ticker):
@@ -33,7 +36,15 @@ def optimize_sl_tp():
 
             with WorkerPool(n_jobs=cpu_count() - 1) as pool:
                 win_rates = pool.map(process, tickers)
+
+            mean_win_rate = np.mean(win_rates)
+            if mean_win_rate > max_win_rate:
+                max_sl = sl
+                max_tp = tp
+                max_win_rate = mean_win_rate
             print("{}, {}: Mean, std win rate = {}, {}".format(sl, tp, np.mean(win_rates), np.std(win_rates)))
+    print("max_sl = {}".format(max_sl))
+    print("max_tp = {}".format(max_tp))
 
 if __name__ == "__main__":
     optimize_sl_tp()
