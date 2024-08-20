@@ -1,3 +1,4 @@
+import re
 import sys
 import pandas as pd
 from tinkoff.invest import Client
@@ -11,16 +12,27 @@ class TinkoffUniverse:
     def __init__(self):
         pass
 
-    def get_shares_figis(self):
+    def get_shares(self):
         with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
             instruments = client.instruments
             res = []
             for item in instruments.shares().instruments:
-                res.append(item.figi)
+                res.append([item.ticker, item.figi])
+            return res
+
+    def get_brent_futures(self):
+        with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+            instruments = client.instruments
+            res = []
+            for item in instruments.futures().instruments:
+                match = re.findall("BR-[0-9]{1,2}\.[0-9]{2}", item.name)
+                if len(match) != 0:
+                    assert len(match) == 1
+                    res.append([item.ticker, item.class_code, item.name])
             return res
 
 if __name__ == "__main__":
     tu = TinkoffUniverse()
-    figis = tu.get_shares_figis()
-    print(len(figis))
-    print(figis)
+    tickers = tu.get_brent_futures()
+    for ticker, class_code, name in tickers:
+        print(ticker, class_code, name)
