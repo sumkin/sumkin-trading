@@ -15,6 +15,6 @@ class TimeFrame:
         elif tf == TimeFrame.INTERVAL_HOUR:
             return CandleInterval.CANDLE_INTERVAL_HOUR
         elif tf == TimeFrame.INTERVAL_DAY:
-            return CandleInterval.CANDLE_INTERVAL_HOUR
+            return CandleInterval.CANDLE_INTERVAL_DAY
 
 

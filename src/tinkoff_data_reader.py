@@ -19,7 +19,7 @@ class TinkoffDataReader:
     def __init__(self):
         pass
 
-    def get_bars_df(self, instrument_id, tf: TimeFrame, start: datetime):
+    def get_bars_df(self, instrument_id: str, tf: TimeFrame, start: datetime, end: datetime):
         res_data = {
             "datetime": [],
             "open": [],
@@ -31,6 +31,7 @@ class TinkoffDataReader:
         with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
             candles = client.get_all_candles(instrument_id=instrument_id,
                                              from_=start,
+                                             to=end,
                                              interval=TimeFrame.get_tinkoff_interval(tf),
                                              candle_source_type=CandleSource.CANDLE_SOURCE_UNSPECIFIED)
             for candle in candles:
