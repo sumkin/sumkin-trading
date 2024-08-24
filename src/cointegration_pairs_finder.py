@@ -1,10 +1,12 @@
 import os
-import copy
 import pytz
 import numpy as np
+import pandas as pd
 import pickle
 from mpire import WorkerPool
 from datetime import datetime, timedelta
+import statsmodels.api as sm
+import statsmodels.tsa.stattools as ts
 
 from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
@@ -78,8 +80,26 @@ class CointegrationPairsFinder:
         for ticker in to_remove:
             del self.dfs[ticker]
 
-    def _
+    def _find_pairs(self):
+        self.pairs = []
+        tickers = list(self.dfs.keys())
+        for i in range(len(tickers)):
+            t1 = tickers[i]
+            for j in range(i + 1, len(tickers)):
+                t2 = tickers[j]
+                df = pd.merge(self.dfs[t1], self.dfs[t2], on="datetime").dropna()
+                vals1 = np.array(df["close_x"].values)
+                vals2 = np.array(df["close_y"].values)
+                ols_result = sm.OLS(vals2, vals1).fit()
+                p_val = ts.adfuller(ols_result.resid)[1]
+                if p_val < 0.01:
+                    self.pairs.append([t1, t2])
 
+    def get_num_tickers(self):
+        return len(self.dfs.keys())
+
+    def get_num_pairs(self):
+        return len(self.pairs)
 
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
@@ -92,3 +112,8 @@ if __name__ == "__main__":
     cpf._read_dfs()
     cpf._filter_by_num_candles()
     cpf._filter_by_volume()
+    cpf._find_pairs()
+    num_tickers = cpf.get_num_tickers()
+    num_pairs = cpf.get_num_pairs()
+    print("Number of tickers = {}".format(num_tickers))
+    print("Number of pairs = {}".format(num_pairs))

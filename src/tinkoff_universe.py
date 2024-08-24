@@ -20,6 +20,8 @@ class TinkoffUniverse:
             instruments = client.instruments
             res = []
             for item in instruments.shares().instruments:
+                if item.currency != "rub":
+                    continue
                 res.append([item.ticker, item.figi])
             return res
 

@@ -19,7 +19,7 @@ class TinkoffDataReader:
     def __init__(self):
         pass
 
-    def get_bars_df(self, instrument_id: str, tf: TimeFrame, start: datetime, end: datetime):
+    def get_bars_df(self, instrument_id: str, tf: TimeFrame, start: datetime, end: datetime = None):
         res_data = {
             "datetime": [],
             "open": [],
@@ -52,15 +52,15 @@ class TinkoffDataReader:
 
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
-    start = datetime.now() - timedelta(minutes=1000)
+    start = datetime.now() - timedelta(days=365)
     start = tz.localize(start)
 
     tu = TinkoffUniverse()
-    tickers = tu.get_brent_futures()
-    for ticker, class_code, figi, name, month, year in tickers:
-        print(ticker, class_code, figi, name, month, year)
+    tickers = tu.get_shares()
+    for ticker, figi in tickers:
+        print(ticker, figi)
         tdr = TinkoffDataReader()
-        df = tdr.get_bars_df(figi, TimeFrame.INTERVAL_1_MIN, start)
+        df = tdr.get_bars_df(figi, TimeFrame.INTERVAL_HOUR, start)
         print(df.head(5))
         print(df.tail(5))
 
