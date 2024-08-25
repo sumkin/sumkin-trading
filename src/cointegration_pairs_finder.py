@@ -91,7 +91,7 @@ class CointegrationPairsFinder:
             for j in range(i + 1, len(tickers)):
                 t2 = tickers[j]
                 df = pd.merge(self.dfs[t1], self.dfs[t2], on="datetime", suffixes=("1", "2")).dropna()
-                df = df[["datetime", "close1", "close2"]]
+                df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
                 fit = smf.ols("close2 ~ close1", data=df).fit()
 
                 # Test for stationarity of residuals.
@@ -116,6 +116,18 @@ class CointegrationPairsFinder:
                     mode="lines",
                     name=t2
                 )
+                volume1 = go.Scatter(
+                    x=df["datetime"],
+                    y=df["volume1"],
+                    mode="lines",
+                    name="{} volume".format(t1)
+                )
+                volume2 = go.Scatter(
+                    x=df["datetime"],
+                    y=df["volume2"],
+                    mode="lines",
+                    name="{} volume".format(t2)
+                )
                 resid = go.Scatter(
                     x=df["datetime"],
                     y=fit.resid,
@@ -123,10 +135,12 @@ class CointegrationPairsFinder:
                     name="residuals"
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-                fig = make_subplots(rows=2, cols=1)
+                fig = make_subplots(rows=3, cols=1)
                 fig.append_trace(chart1, 1, 1)
                 fig.append_trace(chart2, 1, 1)
-                fig.append_trace(resid, 2, 1)
+                fig.append_trace(volume1, 2, 1)
+                fig.append_trace(volume2, 2, 1)
+                fig.append_trace(resid, 3, 1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
 
