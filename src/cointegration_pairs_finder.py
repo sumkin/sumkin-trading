@@ -94,14 +94,26 @@ class CointegrationPairsFinder:
                 df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
                 fit = smf.ols("close2 ~ close1", data=df).fit()
 
+                # Prices should not differ more than 10 times.
+                mean_price1 = df["close1"].mean()
+                mean_price2 = df["close2"].mean()
+                mean_price_ratio = mean_price2 / mean_price1
+                if mean_price_ratio < 0.1 or mean_price_ratio > 10:
+                    continue
+
+                # Limit hedge ratio.
+                hedge_ratio = fit.params["close1"]
+                if abs(hedge_ratio) > 5 or abs(hedge_ratio) < 0.2:
+                    continue
+
                 # Test for stationarity of residuals.
                 p_val_adfuller = ts.adfuller(fit.resid)[1]
-                if p_val_adfuller > 0.01:
+                if p_val_adfuller > 0.005:
                     continue
 
                 # Test for homoscedasticity.
                 p_val_bp = sms.het_breuschpagan(fit.resid, fit.model.exog)[1]
-                if p_val_bp < 0.05:
+                if p_val_bp < 0.02:
                     continue
 
                 chart1 = go.Scatter(
@@ -128,6 +140,12 @@ class CointegrationPairsFinder:
                     mode="lines",
                     name="{} volume".format(t2)
                 )
+                regres = go.Scatter(
+                    x=df["close1"],
+                    y=df["close2"],
+                    mode="markers",
+                    name="{}-{} prices".format(t1, t2)
+                )
                 resid = go.Scatter(
                     x=df["datetime"],
                     y=fit.resid,
@@ -135,12 +153,13 @@ class CointegrationPairsFinder:
                     name="residuals"
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-                fig = make_subplots(rows=3, cols=1)
+                fig = make_subplots(rows=4, cols=1)
                 fig.append_trace(chart1, 1, 1)
                 fig.append_trace(chart2, 1, 1)
                 fig.append_trace(volume1, 2, 1)
                 fig.append_trace(volume2, 2, 1)
-                fig.append_trace(resid, 3, 1)
+                fig.append_trace(regres, 3, 1)
+                fig.append_trace(resid, 4, 1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
 
