@@ -5,8 +5,11 @@ import pandas as pd
 import pickle
 from mpire import WorkerPool
 from datetime import datetime, timedelta
-import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import statsmodels.stats.api as sms
 import statsmodels.tsa.stattools as ts
+from plotly.subplots import make_subplots
+import plotly.graph_objs as go
 
 from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
@@ -87,13 +90,45 @@ class CointegrationPairsFinder:
             t1 = tickers[i]
             for j in range(i + 1, len(tickers)):
                 t2 = tickers[j]
-                df = pd.merge(self.dfs[t1], self.dfs[t2], on="datetime").dropna()
-                vals1 = np.array(df["close_x"].values)
-                vals2 = np.array(df["close_y"].values)
-                ols_result = sm.OLS(vals2, vals1).fit()
-                p_val = ts.adfuller(ols_result.resid)[1]
-                if p_val < 0.01:
-                    self.pairs.append([t1, t2])
+                df = pd.merge(self.dfs[t1], self.dfs[t2], on="datetime", suffixes=("1", "2")).dropna()
+                df = df[["datetime", "close1", "close2"]]
+                fit = smf.ols("close2 ~ close1", data=df).fit()
+
+                # Test for stationarity of residuals.
+                p_val_adfuller = ts.adfuller(fit.resid)[1]
+                if p_val_adfuller > 0.01:
+                    continue
+
+                # Test for homoscedasticity.
+                p_val_bp = sms.het_breuschpagan(fit.resid, fit.model.exog)[1]
+                if p_val_bp < 0.05:
+                    continue
+
+                chart1 = go.Scatter(
+                    x=df["datetime"],
+                    y=df["close1"],
+                    mode="lines",
+                    name=t1
+                )
+                chart2 = go.Scatter(
+                    x=df["datetime"],
+                    y=df["close2"],
+                    mode="lines",
+                    name=t2
+                )
+                resid = go.Scatter(
+                    x=df["datetime"],
+                    y=fit.resid,
+                    mode="lines",
+                    name="residuals"
+                )
+                fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
+                fig = make_subplots(rows=2, cols=1)
+                fig.append_trace(chart1, 1, 1)
+                fig.append_trace(chart2, 1, 1)
+                fig.append_trace(resid, 2, 1)
+                fig.write_html(fname)
+                self.pairs.append([t1, t2])
 
     def get_num_tickers(self):
         return len(self.dfs.keys())
