@@ -10,6 +10,7 @@ import statsmodels.stats.api as sms
 import statsmodels.tsa.stattools as ts
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
+from scipy.stats import shapiro
 
 from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
@@ -114,6 +115,11 @@ class CointegrationPairsFinder:
                 # Test for homoscedasticity.
                 p_val_bp = sms.het_breuschpagan(fit.resid, fit.model.exog)[1]
                 if p_val_bp < 0.02:
+                    continue
+
+                # Test for normality.
+                p_val_norm = shapiro(fit.resid)[1]
+                if p_val_norm < 0.05:
                     continue
 
                 chart1 = go.Scatter(
