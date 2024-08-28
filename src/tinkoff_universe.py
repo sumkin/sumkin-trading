@@ -8,7 +8,6 @@ sys.path.append("..")
 
 from time_frame import TimeFrame
 from tinkoff_tokens import *
-from tinkoff_data_reader import TinkoffDataReader
 
 class TinkoffUniverse:
 
@@ -38,8 +37,15 @@ class TinkoffUniverse:
                     res.append([item.ticker, item.class_code, item.figi, item.name, month, year])
             return res
 
+    def get_figi_by_ticker(self, ticker):
+        with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+            instruments = client.instruments
+            for item in instruments.shares().instruments:
+                if item.ticker == ticker:
+                    return item.figi
+        return None
+
 if __name__ == "__main__":
     tu = TinkoffUniverse()
-    tickers = tu.get_brent_futures()
-    for ticker, class_code, figi, name, month, year in tickers:
-        print(ticker, class_code, figi, name, month, year)
+    figi = tu.get_figi_by_ticker("BANEP")
+    print("figi = {}".format(figi))
