@@ -10,7 +10,7 @@ import statsmodels.stats.api as sms
 import statsmodels.tsa.stattools as ts
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
-from scipy.stats import shapiro
+from scipy.stats import ttest_1samp
 
 from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
@@ -49,6 +49,8 @@ class CointegrationPairsFinder:
                 for i, share in enumerate(shares):
                     tdr = TinkoffDataReader()
                     df = tdr.get_bars_df(share[1], self.tf, start, end)
+                    if df.shape[0] == 0:
+                        continue
                     self.dfs[share[0]] = df
                     print(i, len(shares), share[0], df.shape[0])
                 with open(pickle_fname, "wb") as handle:
@@ -95,6 +97,12 @@ class CointegrationPairsFinder:
                 df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
                 fit = smf.ols("close2 ~ close1", data=df).fit()
 
+                # Check volume in money. It should not be less than 1 million for both stocks.
+                money_volume1 = np.mean(df["volume1"] * df["close1"])
+                money_volume2 = np.mean(df["volume2"] * df["close2"])
+                if money_volume1 < 10e6 or money_volume2 < 10e6:
+                    continue
+
                 # Prices should not differ more than 10 times.
                 mean_price1 = df["close1"].mean()
                 mean_price2 = df["close2"].mean()
@@ -117,10 +125,11 @@ class CointegrationPairsFinder:
                 if p_val_bp < 0.02:
                     continue
 
-                # Test for normality.
-                p_val_norm = shapiro(fit.resid)[1]
-                if p_val_norm < 0.05:
+                # Test for zero mean.
+                p_val_zm = ttest_1samp(fit.resid, 0.0).pvalue
+                if p_val_zm < 0.01:
                     continue
+
 
                 chart1 = go.Scatter(
                     x=df["datetime"],
@@ -177,8 +186,8 @@ class CointegrationPairsFinder:
 
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
-    end = datetime.now()
-    start = datetime.now() - timedelta(days=365)
+    end = datetime(2019, 8, 28) #datetime.now() - timedelta(days=1)
+    start = end - timedelta(days=365)
     start = tz.localize(start)
     end = tz.localize(end)
 
