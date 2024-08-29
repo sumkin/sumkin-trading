@@ -50,6 +50,17 @@ class TinkoffDataReader:
         res_df = pd.DataFrame(data=res_data)
         return res_df
 
+    def get_price(self, instrument_id: str, tf: TimeFrame, dt: datetime):
+        with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+            candles = client.get_all_candles(instrument_id=instrument_id,
+                                             from_=dt,
+                                             to=dt,
+                                             interval=TimeFrame.get_tinkoff_interval(tf),
+                                             candle_source_type=CandleSource.CANDLE_SOURCE_UNSPECIFIED)
+            assert len(list(candles)) == 0
+            candle = list(candles)[0]
+            return float(str(candle.close.units) + "." + str(candle.close.nano))
+
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
     start = datetime.now() - timedelta(days=365)
