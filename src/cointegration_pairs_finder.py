@@ -88,6 +88,7 @@ class CointegrationPairsFinder:
 
     def _find_pairs(self):
         self.pairs = []
+        self.pairs_info = []
         tickers = list(self.dfs.keys())
         for i in range(len(tickers)):
             t1 = tickers[i]
@@ -130,6 +131,7 @@ class CointegrationPairsFinder:
                 if p_val_zm < 0.01:
                     continue
 
+                resid_std = np.std(fit.resid)
 
                 chart1 = go.Scatter(
                     x=df["datetime"],
@@ -169,14 +171,18 @@ class CointegrationPairsFinder:
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
                 fig = make_subplots(rows=4, cols=1)
-                fig.append_trace(chart1, 1, 1)
-                fig.append_trace(chart2, 1, 1)
-                fig.append_trace(volume1, 2, 1)
-                fig.append_trace(volume2, 2, 1)
-                fig.append_trace(regres, 3, 1)
-                fig.append_trace(resid, 4, 1)
+                fig.add_trace(chart1, 1, 1)
+                fig.add_trace(chart2, 1, 1)
+                fig.add_trace(volume1, 2, 1)
+                fig.add_trace(volume2, 2, 1)
+                fig.add_trace(regres, 3, 1)
+                fig.add_trace(resid, 4, 1)
+                fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
+                self.pairs_info.append({"std": resid_std})
+                print("\t", t1, t2, resid_std)
 
     def get_num_tickers(self):
         return len(self.dfs.keys())
@@ -186,15 +192,19 @@ class CointegrationPairsFinder:
 
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
-    end = datetime(2019, 8, 28) #datetime.now() - timedelta(days=1)
-    start = end - timedelta(days=365)
+    end = datetime.now() - timedelta(days=1)
+    start = end - timedelta(days=10)
     start = tz.localize(start)
     end = tz.localize(end)
 
-    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end)
+    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_HOUR, start, end)
+    print("Reading dataframes...")
     cpf._read_dfs()
+    print("Filtering by number of candles...")
     cpf._filter_by_num_candles()
+    print("Filtering by volume...")
     cpf._filter_by_volume()
+    print("Finding pairs...")
     cpf._find_pairs()
     num_tickers = cpf.get_num_tickers()
     num_pairs = cpf.get_num_pairs()

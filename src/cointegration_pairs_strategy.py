@@ -44,6 +44,8 @@ class CointegrationPairsStrategy:
         if self.position.is_empty():
             if resid + mean < -std:
                 # Buy hedge.
+                self.position.buy(self.ticker1, p1, 1)
+
                 return CointegrationPairsStrategy.BUY
             elif resid + mean > std:
                 # Sell hedge.
@@ -55,10 +57,6 @@ class CointegrationPairsStrategy:
                 return CointegrationPairsStrategy.CLOSE
 
         return CointegrationPairsStrategy.HOLD
-
-
-
-
 
 
 if __name__ == "__main__":

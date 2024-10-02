@@ -1,4 +1,5 @@
 import sys
+import time
 import pytz
 import pandas as pd
 from datetime import datetime, timedelta
@@ -29,11 +30,18 @@ class TinkoffDataReader:
             "volume": []
         }
         with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
-            candles = client.get_all_candles(instrument_id=instrument_id,
-                                             from_=start,
-                                             to=end,
-                                             interval=TimeFrame.get_tinkoff_interval(tf),
-                                             candle_source_type=CandleSource.CANDLE_SOURCE_UNSPECIFIED)
+            NUM_ATTEMPTS = 5
+            for i in range(NUM_ATTEMPTS):
+                try:
+                    candles = client.get_all_candles(instrument_id=instrument_id,
+                                                     from_=start,
+                                                     to=end,
+                                                     interval=TimeFrame.get_tinkoff_interval(tf),
+                                                     candle_source_type=CandleSource.CANDLE_SOURCE_UNSPECIFIED)
+                    break
+                except:
+                    time.sleep(5)
+
             for candle in candles:
                 dt = candle.time.strftime("%Y-%m-%d %H:%M:%S")
                 open = float(str(candle.open.units) + "." + str(candle.open.nano))
