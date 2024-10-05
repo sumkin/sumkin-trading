@@ -96,25 +96,33 @@ class CointegrationPairsFinder:
                 t2 = tickers[j]
                 df = pd.merge(self.dfs[t1], self.dfs[t2], on="datetime", suffixes=("1", "2")).dropna()
                 df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
-                fit = smf.ols("close2 ~ close1", data=df).fit()
+
+                # Split dataframe in-sample (is) and out-of-sample (os).
+                df_is = df[:int(df.shape[0] / 2)]
+                df_os = df[int(df.shape[0] / 2):]
+
+                fit = smf.ols("close2 ~ close1", data=df_is).fit()
 
                 # Check volume in money. It should not be less than 1 million for both stocks.
-                money_volume1 = np.mean(df["volume1"] * df["close1"])
-                money_volume2 = np.mean(df["volume2"] * df["close2"])
+                money_volume1 = np.mean(df_is["volume1"] * df_is["close1"])
+                money_volume2 = np.mean(df_is["volume2"] * df_is["close2"])
                 if money_volume1 < 10e6 or money_volume2 < 10e6:
                     continue
 
                 # Prices should not differ more than 10 times.
-                mean_price1 = df["close1"].mean()
-                mean_price2 = df["close2"].mean()
+                mean_price1 = df_is["close1"].mean()
+                mean_price2 = df_is["close2"].mean()
                 mean_price_ratio = mean_price2 / mean_price1
                 if mean_price_ratio < 0.1 or mean_price_ratio > 10:
                     continue
 
                 # Limit hedge ratio.
                 hedge_ratio = fit.params["close1"]
+                intercept = fit.params["Intercept"]
                 if abs(hedge_ratio) > 5 or abs(hedge_ratio) < 0.2:
                     continue
+
+                df_os["resid"] = df_os["close2"] - hedge_ratio * df_os["close1"] - intercept
 
                 # Test for stationarity of residuals.
                 p_val_adfuller = ts.adfuller(fit.resid)[1]
@@ -133,52 +141,108 @@ class CointegrationPairsFinder:
 
                 resid_std = np.std(fit.resid)
 
-                chart1 = go.Scatter(
-                    x=df["datetime"],
-                    y=df["close1"],
+                chart1_is = go.Scatter(
+                    x=df_is["datetime"],
+                    y=df_is["close1"],
                     mode="lines",
-                    name=t1
+                    name=t1,
+                    marker=dict(color="orangered")
                 )
-                chart2 = go.Scatter(
-                    x=df["datetime"],
-                    y=df["close2"],
+                chart1_os = go.Scatter(
+                    x=df_os["datetime"],
+                    y=df_os["close1"],
                     mode="lines",
-                    name=t2
+                    name=t1,
+                    marker=dict(color="orangered")
                 )
-                volume1 = go.Scatter(
-                    x=df["datetime"],
-                    y=df["volume1"],
+                chart2_is = go.Scatter(
+                    x=df_is["datetime"],
+                    y=df_is["close2"],
                     mode="lines",
-                    name="{} volume".format(t1)
+                    name=t2,
+                    marker=dict(color="darkred")
                 )
-                volume2 = go.Scatter(
-                    x=df["datetime"],
-                    y=df["volume2"],
+                chart2_os = go.Scatter(
+                    x=df_os["datetime"],
+                    y=df_os["close2"],
                     mode="lines",
-                    name="{} volume".format(t2)
+                    name=t2,
+                    marker=dict(color="darkred")
                 )
-                regres = go.Scatter(
-                    x=df["close1"],
-                    y=df["close2"],
+                volume1_is = go.Scatter(
+                    x=df_is["datetime"],
+                    y=df_is["volume1"],
+                    mode="lines",
+                    name="{} volume".format(t1),
+                    marker=dict(color="lightgreen")
+                )
+                volume1_os = go.Scatter(
+                    x=df_os["datetime"],
+                    y=df_os["volume1"],
+                    mode="lines",
+                    name=t1,
+                    marker=dict(color="lightgreen")
+                )
+                volume2_is = go.Scatter(
+                    x=df_is["datetime"],
+                    y=df_is["volume2"],
+                    mode="lines",
+                    name="{} volume".format(t2),
+                    marker=dict(color="darkgreen")
+                )
+                volume2_os = go.Scatter(
+                    x=df_os["datetime"],
+                    y=df_os["volume2"],
+                    mode="lines",
+                    name="{} volume".format(t2),
+                    marker=dict(color="darkgreen")
+                )
+                regres_is = go.Scatter(
+                    x=df_is["close1"],
+                    y=df_is["close2"],
                     mode="markers",
+                    marker=dict(color="orange"),
                     name="{}-{} prices".format(t1, t2)
                 )
-                resid = go.Scatter(
-                    x=df["datetime"],
+                regres_os = go.Scatter(
+                    x=df_os["close1"],
+                    y=df_os["close2"],
+                    mode="markers",
+                    marker=dict(color="orange"),
+                    name="{}-{} prices".format(t1, t2)
+                )
+                resid_is = go.Scatter(
+                    x=df_is["datetime"],
                     y=fit.resid,
                     mode="lines",
-                    name="residuals"
+                    name="residuals",
+                    marker=dict(color="blue")
+                )
+                resid_os = go.Scatter(
+                    x=df_os["datetime"],
+                    y=df_os["resid"],
+                    mode="lines",
+                    name="residuals",
+                    marker=dict(color="blue")
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-                fig = make_subplots(rows=4, cols=1)
-                fig.add_trace(chart1, 1, 1)
-                fig.add_trace(chart2, 1, 1)
-                fig.add_trace(volume1, 2, 1)
-                fig.add_trace(volume2, 2, 1)
-                fig.add_trace(regres, 3, 1)
-                fig.add_trace(resid, 4, 1)
+                fig = make_subplots(rows=4, cols=2)
+                fig.add_trace(chart1_is, 1, 1)
+                fig.add_trace(chart2_is, 1, 1)
+                fig.add_trace(chart1_os, 1, 2)
+                fig.add_trace(chart2_os, 1, 2)
+                fig.add_trace(volume1_is, 2, 1)
+                fig.add_trace(volume2_is, 2, 1)
+                fig.add_trace(volume1_os, 2, 2)
+                fig.add_trace(volume2_os, 2, 2)
+                fig.add_trace(regres_is, 3, 1)
+                fig.add_trace(regres_os, 3, 2)
+                fig.add_trace(resid_is, 4, 1)
                 fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_trace(resid_os, 4, 2)
+                fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({"std": resid_std})
@@ -193,7 +257,7 @@ class CointegrationPairsFinder:
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
     end = datetime.now() - timedelta(days=1)
-    start = end - timedelta(days=10)
+    start = end - timedelta(days=20)
     start = tz.localize(start)
     end = tz.localize(end)
 
