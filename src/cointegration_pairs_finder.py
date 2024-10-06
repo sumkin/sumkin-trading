@@ -15,6 +15,7 @@ from scipy.stats import ttest_1samp
 from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
 from tinkoff_data_reader import TinkoffDataReader
+from cointegration_pair_checker import CointegrationPairChecker
 
 class CointegrationPairsFinder:
 
@@ -101,45 +102,13 @@ class CointegrationPairsFinder:
                 df_is = df[:int(df.shape[0] / 2)]
                 df_os = df[int(df.shape[0] / 2):]
 
-                fit = smf.ols("close2 ~ close1", data=df_is).fit()
-
-                # Check volume in money. It should not be less than 1 million for both stocks.
-                money_volume1 = np.mean(df_is["volume1"] * df_is["close1"])
-                money_volume2 = np.mean(df_is["volume2"] * df_is["close2"])
-                if money_volume1 < 10e6 or money_volume2 < 10e6:
-                    continue
-
-                # Prices should not differ more than 10 times.
-                mean_price1 = df_is["close1"].mean()
-                mean_price2 = df_is["close2"].mean()
-                mean_price_ratio = mean_price2 / mean_price1
-                if mean_price_ratio < 0.1 or mean_price_ratio > 10:
-                    continue
-
-                # Limit hedge ratio.
-                hedge_ratio = fit.params["close1"]
-                intercept = fit.params["Intercept"]
-                if abs(hedge_ratio) > 5 or abs(hedge_ratio) < 0.2:
+                cpc = CointegrationPairChecker(df_is)
+                res, hedge_ratio, intercept, resid = cpc.cointegrate()
+                if not res:
                     continue
 
                 df_os["resid"] = df_os["close2"] - hedge_ratio * df_os["close1"] - intercept
-
-                # Test for stationarity of residuals.
-                p_val_adfuller = ts.adfuller(fit.resid)[1]
-                if p_val_adfuller > 0.005:
-                    continue
-
-                # Test for homoscedasticity.
-                p_val_bp = sms.het_breuschpagan(fit.resid, fit.model.exog)[1]
-                if p_val_bp < 0.02:
-                    continue
-
-                # Test for zero mean.
-                p_val_zm = ttest_1samp(fit.resid, 0.0).pvalue
-                if p_val_zm < 0.01:
-                    continue
-
-                resid_std = np.std(fit.resid)
+                resid_std = np.std(resid)
 
                 chart1_is = go.Scatter(
                     x=df_is["datetime"],
@@ -211,11 +180,11 @@ class CointegrationPairsFinder:
                     marker=dict(color="orange"),
                     name="{}-{} prices".format(t1, t2)
                 )
-                resid_min = min(min(fit.resid), min(df_os["resid"]))
-                resid_max = max(max(fit.resid), max(df_os["resid"]))
+                resid_min = min(min(resid), min(df_os["resid"]))
+                resid_max = max(max(resid), max(df_os["resid"]))
                 resid_is = go.Scatter(
                     x=df_is["datetime"],
-                    y=fit.resid,
+                    y=resid,
                     mode="lines",
                     name="residuals",
                     marker=dict(color="blue")
