@@ -211,6 +211,8 @@ class CointegrationPairsFinder:
                     marker=dict(color="orange"),
                     name="{}-{} prices".format(t1, t2)
                 )
+                resid_min = min(min(fit.resid), min(df_os["resid"]))
+                resid_max = max(max(fit.resid), max(df_os["resid"]))
                 resid_is = go.Scatter(
                     x=df_is["datetime"],
                     y=fit.resid,
@@ -227,6 +229,8 @@ class CointegrationPairsFinder:
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
                 fig = make_subplots(rows=4, cols=2)
+                fig.update_yaxes(range=[resid_min, resid_max], row=4, col=1)
+                fig.update_yaxes(range=[resid_min, resid_max], row=4, col=2)
                 fig.add_trace(chart1_is, 1, 1)
                 fig.add_trace(chart2_is, 1, 1)
                 fig.add_trace(chart1_os, 1, 2)
@@ -238,11 +242,11 @@ class CointegrationPairsFinder:
                 fig.add_trace(regres_is, 3, 1)
                 fig.add_trace(regres_os, 3, 2)
                 fig.add_trace(resid_is, 4, 1)
-                fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=0.75 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-0.72 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.add_trace(resid_os, 4, 2)
-                fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=0.75 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-0.75 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({"std": resid_std})
