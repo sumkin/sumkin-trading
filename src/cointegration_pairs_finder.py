@@ -30,7 +30,7 @@ class CointegrationPairsFinder:
 
         self.dfs = {}
         pickle_fname = "../cache/cointegration_pairs_finder/dfs.pickle"
-        if os.path.isfile(pickle_fname):
+        if False: #os.path.isfile(pickle_fname):
             with open(pickle_fname, "rb") as handle:
                 self.dfs = pickle.load(handle)
         else:
@@ -99,8 +99,8 @@ class CointegrationPairsFinder:
                 df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
 
                 # Split dataframe in-sample (is) and out-of-sample (os).
-                df_is = df[:int(df.shape[0] / 2)]
-                df_os = df[int(df.shape[0] / 2):]
+                df_is = df[:int(df.shape[0] * 0.5)]
+                df_os = df[int(df.shape[0]  * 0.5):]
 
                 cpc = CointegrationPairChecker(df_is)
                 res, hedge_ratio, intercept, resid = cpc.cointegrate()
@@ -182,6 +182,8 @@ class CointegrationPairsFinder:
                 )
                 resid_min = min(min(resid), min(df_os["resid"]))
                 resid_max = max(max(resid), max(df_os["resid"]))
+                regres_min = min(min(df_is["close1"].min(), df_is["close2"].min()), min(df_os["close1"].min(), df_os["close2"].min()))
+                regres_max = max(max(df_is["close1"].max(), df_is["close2"].max()), max(df_os["close1"].max(), df_os["close2"].max()))
                 resid_is = go.Scatter(
                     x=df_is["datetime"],
                     y=resid,
@@ -200,6 +202,10 @@ class CointegrationPairsFinder:
                 fig = make_subplots(rows=4, cols=2)
                 fig.update_yaxes(range=[resid_min, resid_max], row=4, col=1)
                 fig.update_yaxes(range=[resid_min, resid_max], row=4, col=2)
+                fig.update_xaxes(range=[regres_min, regres_max], row=3, col=1)
+                fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=1)
+                fig.update_xaxes(range=[regres_min, regres_max], row=3, col=2)
+                fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=2)
                 fig.add_trace(chart1_is, 1, 1)
                 fig.add_trace(chart2_is, 1, 1)
                 fig.add_trace(chart1_os, 1, 2)
@@ -212,7 +218,7 @@ class CointegrationPairsFinder:
                 fig.add_trace(regres_os, 3, 2)
                 fig.add_trace(resid_is, 4, 1)
                 fig.add_hline(y=0.75 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-0.72 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-0.75 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.add_trace(resid_os, 4, 2)
                 fig.add_hline(y=0.75 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
                 fig.add_hline(y=-0.75 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
@@ -230,11 +236,11 @@ class CointegrationPairsFinder:
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
     end = datetime.now() - timedelta(days=1)
-    start = end - timedelta(days=20)
+    start = end - timedelta(days=150)
     start = tz.localize(start)
     end = tz.localize(end)
 
-    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_HOUR, start, end)
+    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end)
     print("Reading dataframes...")
     cpf._read_dfs()
     print("Filtering by number of candles...")

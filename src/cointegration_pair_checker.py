@@ -22,13 +22,13 @@ class CointegrationPairChecker:
         mean_price1 = self.df["close1"].mean()
         mean_price2 = self.df["close2"].mean()
         mean_price_ratio = mean_price2 / mean_price1
-        if mean_price_ratio < 0.1 or mean_price_ratio > 10:
+        if mean_price_ratio < 0.5 or mean_price_ratio > 2:
             return False, None, None, None
 
         # Limit hedge ratio.
         hedge_ratio = fit.params["close1"]
         intercept = fit.params["Intercept"]
-        if abs(hedge_ratio) > 5 or abs(hedge_ratio) < 0.2:
+        if hedge_ratio > 2 or hedge_ratio < 0.5:
             return False, None, None, None
 
         # Test for stationarity of residuals.
@@ -44,6 +44,16 @@ class CointegrationPairChecker:
         # Test for zero mean.
         p_val_zm = ttest_1samp(fit.resid, 0.0).pvalue
         if p_val_zm < 0.01:
+            return False, None, None, None
+
+        # Standard deviation of residuals should not be small.
+        if np.std(fit.resid) < 10:
+            return False, None, None, None
+
+        resid_std = np.std(fit.resid)
+        last_close2 = float(self.df["close2"].iloc[-1])
+        last_close1 = float(self.df["close1"].iloc[-1])
+        if abs(last_close2 - intercept - hedge_ratio * last_close1) > 2 * resid_std:
             return False, None, None, None
 
         return True, hedge_ratio, intercept, fit.resid
