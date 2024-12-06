@@ -12,6 +12,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 from scipy.stats import ttest_1samp
 
+from defs import ROOT_FOLDER
 from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
 from tinkoff_data_reader import TinkoffDataReader
@@ -30,7 +31,7 @@ class CointegrationPairsFinder:
         shares = tu.get_shares()
 
         self.dfs = {}
-        pickle_fname = "../cache/cointegration_pairs_finder/dfs.pickle"
+        pickle_fname = ROOT_FOLDER + "/cache/cointegration_pairs_finder/dfs.pickle"
         if False: #os.path.isfile(pickle_fname):
             with open(pickle_fname, "rb") as handle:
                 self.dfs = pickle.load(handle)
@@ -199,7 +200,7 @@ class CointegrationPairsFinder:
                     name="residuals",
                     marker=dict(color="blue")
                 )
-                fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
+                fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
                 fig = make_subplots(rows=4,
                                     cols=2,
                                     shared_yaxes=True,
@@ -252,7 +253,7 @@ class CointegrationPairsFinder:
         for pair in self.pairs:
             t1, t2 = pair
             title = "{}_{} pair".format(t1, t2)
-            fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
+            fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
             tb = TelegramBot()
             tb.send_document(title, fname)
 

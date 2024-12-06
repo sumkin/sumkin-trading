@@ -1,12 +1,10 @@
 import re
 import sys
-import pytz
-from datetime import datetime as dt, timedelta
 from tinkoff.invest import Client
 from tinkoff.invest.constants import INVEST_GRPC_API_SANDBOX
-sys.path.append("..")
 
-from time_frame import TimeFrame
+from defs import ROOT_FOLDER
+sys.path.append(ROOT_FOLDER)
 from tinkoff_tokens import *
 
 class TinkoffUniverse:
