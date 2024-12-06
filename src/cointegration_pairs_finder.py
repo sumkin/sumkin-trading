@@ -100,8 +100,8 @@ class CointegrationPairsFinder:
                 df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
 
                 # Split dataframe in-sample (is) and out-of-sample (os).
-                df_is = df[:int(df.shape[0] * 0.5)]
-                df_os = df[int(df.shape[0]  * 0.5):]
+                df_is = df[:int(df.shape[0] * 0.75)]
+                df_os = df[int(df.shape[0]  * 0.75):]
 
                 cpc = CointegrationPairChecker(df_is)
                 res, hedge_ratio, intercept, resid = cpc.cointegrate()
@@ -200,7 +200,7 @@ class CointegrationPairsFinder:
                     marker=dict(color="blue")
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-                fig = make_subplots(rows=4, cols=2)
+                fig = make_subplots(rows=4, cols=2, shared_yaxes=True, horizontal_spacing=0.0025, column_widths=[750, 250])
                 fig.update_yaxes(range=[resid_min, resid_max], row=4, col=1)
                 fig.update_yaxes(range=[resid_min, resid_max], row=4, col=2)
                 fig.update_xaxes(range=[regres_min, regres_max], row=3, col=1)
@@ -218,13 +218,15 @@ class CointegrationPairsFinder:
                 fig.add_trace(regres_is, 3, 1)
                 fig.add_trace(regres_os, 3, 2)
                 fig.add_trace(resid_is, 4, 1)
-                fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
                 fig.add_trace(resid_os, 4, 2)
-                fig.add_hline(y=2 * resid_std, row=4, col=2, line_dash="dash", line_color="black", line_width=1)
-                fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-2 * resid_std, row=4, col=2, line_dash="dash", line_color="black", line_width=1)
+                fig.add_hline(y=3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({"std": resid_std})
@@ -247,7 +249,7 @@ class CointegrationPairsFinder:
 
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
-    end = datetime.now() - timedelta(days=10)
+    end = datetime.now() - timedelta(days=1)
     start = end - timedelta(days=150)
     start = tz.localize(start)
     end = tz.localize(end)
