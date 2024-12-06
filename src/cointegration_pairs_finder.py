@@ -16,6 +16,7 @@ from time_frame import TimeFrame
 from tinkoff_universe import TinkoffUniverse
 from tinkoff_data_reader import TinkoffDataReader
 from cointegration_pair_checker import CointegrationPairChecker
+from telegram_bot import TelegramBot
 
 class CointegrationPairsFinder:
 
@@ -217,11 +218,13 @@ class CointegrationPairsFinder:
                 fig.add_trace(regres_is, 3, 1)
                 fig.add_trace(regres_os, 3, 2)
                 fig.add_trace(resid_is, 4, 1)
-                fig.add_hline(y=0.75 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-0.75 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.add_trace(resid_os, 4, 2)
-                fig.add_hline(y=0.75 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=-0.75 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=2 * resid_std, row=4, col=2, line_dash="dash", line_color="black", line_width=1)
+                fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=-2 * resid_std, row=4, col=2, line_dash="dash", line_color="black", line_width=1)
                 fig.write_html(fname)
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({"std": resid_std})
@@ -233,9 +236,18 @@ class CointegrationPairsFinder:
     def get_num_pairs(self):
         return len(self.pairs)
 
+    def send_found_pairs(self):
+        for pair in self.pairs:
+            t1, t2 = pair
+            title = "{}_{} pair".format(t1, t2)
+            fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
+            tb = TelegramBot()
+            tb.send_document(title, fname)
+
+
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
-    end = datetime.now() - timedelta(days=1)
+    end = datetime.now() - timedelta(days=10)
     start = end - timedelta(days=150)
     start = tz.localize(start)
     end = tz.localize(end)
@@ -249,6 +261,9 @@ if __name__ == "__main__":
     cpf._filter_by_volume()
     print("Finding pairs...")
     cpf._find_pairs()
+    print("Sending to Telegram...")
+    cpf.send_found_pairs()
+
     num_tickers = cpf.get_num_tickers()
     num_pairs = cpf.get_num_pairs()
     print("Number of tickers = {}".format(num_tickers))
