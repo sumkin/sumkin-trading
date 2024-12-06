@@ -178,7 +178,7 @@ class CointegrationPairsFinder:
                     x=df_os["close1"],
                     y=df_os["close2"],
                     mode="markers",
-                    marker=dict(color="orange"),
+                    marker=dict(color="purple"),
                     name="{}-{} prices".format(t1, t2)
                 )
                 resid_min = min(min(resid), min(df_os["resid"]))
@@ -200,7 +200,17 @@ class CointegrationPairsFinder:
                     marker=dict(color="blue")
                 )
                 fname = "../output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-                fig = make_subplots(rows=4, cols=2, shared_yaxes=True, horizontal_spacing=0.0025, column_widths=[750, 250])
+                fig = make_subplots(rows=4,
+                                    cols=2,
+                                    shared_yaxes=True,
+                                    horizontal_spacing=0.0025,
+                                    column_widths=[750, 250],
+                                    specs=[
+                                        [{}, {}],
+                                        [{}, {}],
+                                        [{"colspan": 2}, None],
+                                        [{}, {}]
+                                    ])
                 fig.update_yaxes(range=[min(-3 * resid_std, resid_min), max(3 * resid_std, resid_max)], row=4, col=1)
                 fig.update_yaxes(range=[min(-3 * resid_std, resid_min), max(3 * resid_std, resid_max)], row=4, col=2)
                 fig.update_xaxes(range=[regres_min, regres_max], row=3, col=1)
@@ -216,7 +226,7 @@ class CointegrationPairsFinder:
                 fig.add_trace(volume1_os, 2, 2)
                 fig.add_trace(volume2_os, 2, 2)
                 fig.add_trace(regres_is, 3, 1)
-                fig.add_trace(regres_os, 3, 2)
+                fig.add_trace(regres_os, 3, 1)
                 fig.add_trace(resid_is, 4, 1)
                 fig.add_hline(y=3 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
