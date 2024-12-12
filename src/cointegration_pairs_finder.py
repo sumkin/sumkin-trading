@@ -105,7 +105,7 @@ class CointegrationPairsFinder:
                 df_os = df[int(df.shape[0]  * 0.75):]
 
                 cpc = CointegrationPairChecker(df_is)
-                res, hedge_ratio, intercept, resid = cpc.cointegrate()
+                res, hedge_ratio, intercept, resid, info = cpc.cointegrate()
                 if not res:
                     continue
 
