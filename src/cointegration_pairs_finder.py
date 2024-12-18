@@ -5,12 +5,9 @@ import pandas as pd
 import pickle
 from mpire import WorkerPool
 from datetime import datetime, timedelta
-import statsmodels.formula.api as smf
-import statsmodels.stats.api as sms
-import statsmodels.tsa.stattools as ts
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
-from scipy.stats import ttest_1samp
+from jinja2 import Template
 
 from defs import ROOT_FOLDER
 from time_frame import TimeFrame
@@ -238,7 +235,19 @@ class CointegrationPairsFinder:
                 fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
                 fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
                 fig.add_hline(y=-3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.write_html(fname)
+
+                # Write html file.
+                output_html_path = fname
+                input_template_path = ROOT_FOLDER + "/templates/cointegration_pair.html"
+                plotly_jinja_data = {
+                    "fig": fig.to_html(full_html=False, default_height=1000),
+                    "info": info
+                }
+                with open(output_html_path, "w", encoding="utf-8") as output_file:
+                    with open(input_template_path) as template_file:
+                        j2_template = Template(template_file.read())
+                        output_file.write(j2_template.render(plotly_jinja_data))
+
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({"std": resid_std})
                 print("\t", t1, t2, resid_std)
