@@ -7,8 +7,25 @@
     <body>
         {{fig}}
         <p>
-        Stationarity adfuller p-value: {{ info["p_val_adfuller"] }}<br />
-        Homoscedasticity Breusch-Pagan p-value: {{ info["p_val_bp"] }}<br />
+            <table style="margin-left: auto; margin-right: auto">
+                <th>Testing</th>
+                <tr>
+                    <td style="text-align:right">
+                        Augmented Dickey-Fuller test p-value (stationarity):
+                    </td>
+                    <td style="text-align:left">
+                        {{ info["p_val_adfuller"] }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align:right">
+                        Breusch-Pagan test p-value (homoscedasticity):
+                    </td>
+                    <td style="text-align:left">
+                        {{ info["p_val_bp"] }}
+                    </td>
+                </tr>
+            </table>
         </p>
     </body>
 </html>
