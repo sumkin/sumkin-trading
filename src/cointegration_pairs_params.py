@@ -5,7 +5,7 @@ class CointegrationPairsParams:
     MIN_HEDGE_RATIO = 0.5
     MAX_HEDGE_RATIO = 2
     MAX_ADFULLER = 0.005
-    MIN_HOMOSCED_P_VAL = 0.02
+    MIN_HOMOSCED_P_VAL = 0.05
     MIN_ZERO_MEAN_P_VAL = 0.01
     MIN_STD_RESID = 10
 

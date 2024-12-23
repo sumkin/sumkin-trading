@@ -7,8 +7,8 @@
     <body>
         {{fig}}
         <p>
-            <table style="margin-left: auto; margin-right: auto">
-                <th>Testing</th>
+            <table style="margin-left: auto; margin-right: auto;">
+                <th colspan="2">Testing</th>
                 <tr>
                     <td style="text-align:right">
                         Augmented Dickey-Fuller test p-value (stationarity):
@@ -23,6 +23,22 @@
                     </td>
                     <td style="text-align:left">
                         {{ info["p_val_bp"] }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align:right">
+                        Zero-mean test p-value:
+                    </td>
+                    <td style="text-align:left">
+                        {{ info["p_val_zm"] }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align:right">
+                        Hedge ratio:
+                    </td>
+                    <td style="text-align:left">
+                        {{ info["hedge_ratio"] }}
                     </td>
                 </tr>
             </table>

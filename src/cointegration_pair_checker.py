@@ -65,7 +65,8 @@ class CointegrationPairChecker:
             "p_val_adfuller": p_val_adfuller,
             "p_val_bp": p_val_bp,
             "p_val_zm": p_val_zm,
-            "mk_trend": mk_res.trend
+            "mk_trend": mk_res.trend,
+            "hedge_ratio": hedge_ratio
         }
 
         return True, hedge_ratio, intercept, fit.resid, info
