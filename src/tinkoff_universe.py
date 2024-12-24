@@ -1,4 +1,3 @@
-import re
 import sys
 from tinkoff.invest import Client
 from tinkoff.invest.constants import INVEST_GRPC_API_SANDBOX
