@@ -25,7 +25,7 @@ class CointegrationPairsFinder:
 
     def _read_dfs(self):
         tu = TinkoffUniverse()
-        shares = tu.get_shares()
+        tickers = tu.get_tickers()
 
         self.dfs = {}
         pickle_fname = ROOT_FOLDER + "/cache/cointegration_pairs_finder/dfs.pickle"
@@ -38,21 +38,21 @@ class CointegrationPairsFinder:
                 with WorkerPool(n_jobs=os.cpu_count()) as pool:
                     tdr = TinkoffDataReader()
                     f = lambda figi: tdr.get_bars_df(figi, self.tf, start, end)
-                    dfs = pool.map(f, [share[1] for share in shares])
-                    assert len(shares) == len(dfs)
+                    dfs = pool.map(f, [ticker[1] for ticker in tickers])
+                    assert len(tickers) == len(dfs)
                     self.dfs = {}
-                    for i in range(len(shares)):
-                        self.dfs[shares[i][0]] = dfs[i]
+                    for i in range(len(tickers)):
+                        self.dfs[tickers[i][0]] = dfs[i]
                     with open(pickle_fname, "wb") as handle:
                         pickle.dump(self.dfs, handle)
             else:
-                for i, share in enumerate(shares):
+                for i, ticker in enumerate(tickers):
                     tdr = TinkoffDataReader()
-                    df = tdr.get_bars_df(share[1], self.tf, start, end)
+                    df = tdr.get_bars_df(ticker[1], self.tf, start, end)
                     if df.shape[0] == 0:
                         continue
-                    self.dfs[share[0]] = df
-                    print(i, len(shares), share[0], df.shape[0])
+                    self.dfs[ticker[0]] = df
+                    print(i, len(tickers), ticker[0], df.shape[0])
                 with open(pickle_fname, "wb") as handle:
                     pickle.dump(self.dfs, handle)
 

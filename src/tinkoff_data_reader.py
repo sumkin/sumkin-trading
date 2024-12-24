@@ -75,7 +75,7 @@ if __name__ == "__main__":
     start = tz.localize(start)
 
     tu = TinkoffUniverse()
-    tickers = tu.get_shares()
+    tickers = tu.get_tickers()
     for ticker, figi in tickers:
         print(ticker, figi)
         tdr = TinkoffDataReader()
