@@ -15,11 +15,10 @@ class CointegrationPairsStrategy:
     HOLD = 4
 
     def __init__(self, ticker1, ticker2):
-        tu = TinkoffUniverse()
         self.ticker1 = ticker1
         self.ticker2 = ticker2
-        self.figi1 = tu.get_figi_by_ticker(ticker1)
-        self.figi2 = tu.get_figi_by_ticker(ticker2)
+        self.figi1 = TinkoffUniverse.get_figi_by_ticker(ticker1)
+        self.figi2 = TinkoffUniverse.get_figi_by_ticker(ticker2)
         self.look_back = timedelta(days=365)
         self.position = Position()
 

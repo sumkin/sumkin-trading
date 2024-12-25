@@ -22,7 +22,8 @@ class TinkoffUniverse(Universe):
                 res.append([item.ticker, item.figi])
             return res
 
-    def get_figi_by_ticker(self, ticker):
+    @staticmethod
+    def get_figi_by_ticker(ticker):
         with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
             instruments = client.instruments
             for item in instruments.shares().instruments:
@@ -31,6 +32,5 @@ class TinkoffUniverse(Universe):
         return None
 
 if __name__ == "__main__":
-    tu = TinkoffUniverse()
-    figi = tu.get_figi_by_ticker("BANEP")
+    figi = TinkoffUniverse.get_figi_by_ticker("BANEP")
     print("figi = {}".format(figi))
