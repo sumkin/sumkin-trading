@@ -11,6 +11,8 @@ from jinja2 import Template
 
 from defs import ROOT_FOLDER
 from time_frame import TimeFrame
+from universe import Universe
+from data_reader import DataReader
 from tinkoff_universe import TinkoffUniverse
 from tinkoff_data_reader import TinkoffDataReader
 from cointegration_pair_checker import CointegrationPairChecker
@@ -18,14 +20,20 @@ from telegram_bot import TelegramBot
 
 class CointegrationPairsFinder:
 
-    def __init__(self, tf: TimeFrame, start: datetime, end: datetime):
+    def __init__(self,
+                 tf: TimeFrame,
+                 start: datetime,
+                 end: datetime,
+                 u: Universe,
+                 dr: DataReader):
         self.tf = tf
         self.start = start
         self.end = end
+        self.u = u
+        self.dr = dr
 
     def _read_dfs(self):
-        tu = TinkoffUniverse()
-        tickers = tu.get_tickers()
+        tickers = self.u.get_tickers()
 
         self.dfs = {}
         pickle_fname = ROOT_FOLDER + "/cache/cointegration_pairs_finder/dfs.pickle"
@@ -36,8 +44,7 @@ class CointegrationPairsFinder:
             parallel = False
             if parallel:
                 with WorkerPool(n_jobs=os.cpu_count()) as pool:
-                    tdr = TinkoffDataReader()
-                    f = lambda figi: tdr.get_bars_df(ticker, self.tf, start, end)
+                    f = lambda figi: self.dr.get_bars_df(ticker, self.tf, start, end)
                     dfs = pool.map(f, [ticker for ticker in tickers])
                     assert len(tickers) == len(dfs)
                     self.dfs = {}
@@ -47,8 +54,7 @@ class CointegrationPairsFinder:
                         pickle.dump(self.dfs, handle)
             else:
                 for i, ticker in enumerate(tickers):
-                    tdr = TinkoffDataReader()
-                    df = tdr.get_bars_df(ticker, self.tf, start, end)
+                    df = self.dr.get_bars_df(ticker, self.tf, start, end)
                     if df.shape[0] == 0:
                         continue
                     self.dfs[ticker[0]] = df
@@ -274,7 +280,9 @@ if __name__ == "__main__":
     start = tz.localize(start)
     end = tz.localize(end)
 
-    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end)
+    tu = TinkoffUniverse()
+    tdr = TinkoffDataReader()
+    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end, tu, tdr)
     print("Reading dataframes...")
     cpf._read_dfs()
     print("Filtering by number of candles...")
