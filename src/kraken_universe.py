@@ -25,7 +25,7 @@ class KrakenUniverse(Universe):
         for k in result.keys():
             altname = result[k]["altname"]
             if altname[-3:] == "USD":
-                res.append([altname, None])
+                res.append(altname)
         return res
 
 if __name__ == "__main__":

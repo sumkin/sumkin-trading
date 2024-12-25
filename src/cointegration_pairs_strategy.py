@@ -17,8 +17,6 @@ class CointegrationPairsStrategy:
     def __init__(self, ticker1, ticker2):
         self.ticker1 = ticker1
         self.ticker2 = ticker2
-        self.figi1 = TinkoffUniverse.get_figi_by_ticker(ticker1)
-        self.figi2 = TinkoffUniverse.get_figi_by_ticker(ticker2)
         self.look_back = timedelta(days=365)
         self.position = Position()
 
@@ -27,8 +25,8 @@ class CointegrationPairsStrategy:
         end = dt - timedelta(days=1)
 
         tdr = TinkoffDataReader()
-        df1 = tdr.get_bars_df(self.figi1, TimeFrame.INTERVAL_DAY, start, end)
-        df2 = tdr.get_bars_df(self.figi2, TimeFrame.INTERVAL_DAY, start, end)
+        df1 = tdr.get_bars_df(self.ticker1, TimeFrame.INTERVAL_DAY, start, end)
+        df2 = tdr.get_bars_df(self.ticker2, TimeFrame.INTERVAL_DAY, start, end)
         df = pd.merge(df1, df2, on="datetime", suffixes=("1", "2")).dropna()
         fit = smf.ols("close2 ~ close1", data=df).fit()
 
@@ -36,8 +34,8 @@ class CointegrationPairsStrategy:
         std = np.std(fit.resid)
         hedge_ratio = fit.params["close1"]
 
-        p1 = tdr.get_price(self.figi1, TimeFrame.INTERVAL_DAY, dt)
-        p2 = tdr.get_price(self.figi2, TimeFrame.INTERVAL_DAY, dt)
+        p1 = tdr.get_price(self.ticker1, TimeFrame.INTERVAL_DAY, dt)
+        p2 = tdr.get_price(self.ticker2, TimeFrame.INTERVAL_DAY, dt)
         resid = p2 - hedge_ratio * p1
 
         if self.position.is_empty():

@@ -20,7 +20,9 @@ class TinkoffDataReader:
     def __init__(self):
         pass
 
-    def get_bars_df(self, instrument_id: str, tf: TimeFrame, start: datetime, end: datetime = None):
+    def get_bars_df(self, ticker: str, tf: TimeFrame, start: datetime, end: datetime = None):
+        instrument_id = TinkoffUniverse.get_figi_by_ticker(ticker)
+
         res_data = {
             "datetime": [],
             "open": [],
@@ -58,7 +60,8 @@ class TinkoffDataReader:
         res_df = pd.DataFrame(data=res_data)
         return res_df
 
-    def get_price(self, instrument_id: str, tf: TimeFrame, dt: datetime):
+    def get_price(self, ticker: str, tf: TimeFrame, dt: datetime):
+        instrument_id = TinkoffUniverse.get_figi_by_ticker(ticker)
         with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
             candles = client.get_all_candles(instrument_id=instrument_id,
                                              from_=dt,

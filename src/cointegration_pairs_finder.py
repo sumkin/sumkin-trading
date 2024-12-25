@@ -37,8 +37,8 @@ class CointegrationPairsFinder:
             if parallel:
                 with WorkerPool(n_jobs=os.cpu_count()) as pool:
                     tdr = TinkoffDataReader()
-                    f = lambda figi: tdr.get_bars_df(figi, self.tf, start, end)
-                    dfs = pool.map(f, [ticker[1] for ticker in tickers])
+                    f = lambda figi: tdr.get_bars_df(ticker, self.tf, start, end)
+                    dfs = pool.map(f, [ticker for ticker in tickers])
                     assert len(tickers) == len(dfs)
                     self.dfs = {}
                     for i in range(len(tickers)):
@@ -48,11 +48,11 @@ class CointegrationPairsFinder:
             else:
                 for i, ticker in enumerate(tickers):
                     tdr = TinkoffDataReader()
-                    df = tdr.get_bars_df(ticker[1], self.tf, start, end)
+                    df = tdr.get_bars_df(ticker, self.tf, start, end)
                     if df.shape[0] == 0:
                         continue
                     self.dfs[ticker[0]] = df
-                    print(i, len(tickers), ticker[0], df.shape[0])
+                    print(i, len(tickers), ticker, df.shape[0])
                 with open(pickle_fname, "wb") as handle:
                     pickle.dump(self.dfs, handle)
 
