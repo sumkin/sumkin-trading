@@ -5,8 +5,9 @@ from tinkoff.invest.constants import INVEST_GRPC_API_SANDBOX
 from defs import ROOT_FOLDER
 sys.path.append(ROOT_FOLDER)
 from tinkoff_tokens import *
+from universe import Universe
 
-class TinkoffUniverse:
+class TinkoffUniverse(Universe):
 
     def __init__(self):
         pass

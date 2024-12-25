@@ -1,14 +1,7 @@
-import pandas as pd
+from abc import ABC, abstractmethod
 
-class Universe:
+class Universe(ABC):
 
-    def __init__(self):
-        self.sp500_df = pd.read_csv("../data/sp500_companies.csv")
-
+    @abstractmethod
     def get_tickers(self):
-        return self.sp500_df["Symbol"].to_list()
-
-if __name__ == "__main__":
-    universe = Universe()
-    tickers = universe.get_tickers()
-    print(tickers)
+        pass

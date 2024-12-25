@@ -5,8 +5,9 @@ import requests
 from defs import ROOT_FOLDER
 sys.path.append(ROOT_FOLDER)
 from kraken_api_keys import *
+from universe import Universe
 
-class KrakenUniverse:
+class KrakenUniverse(Universe):
 
     def __init__(self):
         pass
