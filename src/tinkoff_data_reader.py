@@ -8,11 +8,12 @@ from tinkoff.invest.constants import INVEST_GRPC_API_SANDBOX
 from tinkoff.invest.schemas import CandleSource
 sys.path.append("..")
 
+from data_reader import DataReader
 from tinkoff_tokens import *
 from tinkoff_universe import *
 from time_frame import *
 
-class TinkoffDataReader:
+class TinkoffDataReader(DataReader):
     """
     Reads the data.
     """
