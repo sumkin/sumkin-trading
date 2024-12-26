@@ -33,7 +33,7 @@ class TinkoffDataReader:
         }
         with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
             NUM_ATTEMPTS = 5
-            for i in range(NUM_ATTEMPTS):
+            for _ in range(NUM_ATTEMPTS):
                 try:
                     candles = client.get_all_candles(instrument_id=instrument_id,
                                                      from_=start,
