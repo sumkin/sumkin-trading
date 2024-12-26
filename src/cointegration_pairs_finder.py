@@ -44,7 +44,7 @@ class CointegrationPairsFinder:
             parallel = False
             if parallel:
                 with WorkerPool(n_jobs=os.cpu_count()) as pool:
-                    f = lambda figi: self.dr.get_bars_df(ticker, self.tf, start, end)
+                    f = lambda figi: self.dr.get_bars_df(ticker, self.tf, self.start, self.end)
                     dfs = pool.map(f, [ticker for ticker in tickers])
                     assert len(tickers) == len(dfs)
                     self.dfs = {}
@@ -54,7 +54,7 @@ class CointegrationPairsFinder:
                         pickle.dump(self.dfs, handle)
             else:
                 for i, ticker in enumerate(tickers):
-                    df = self.dr.get_bars_df(ticker, self.tf, start, end)
+                    df = self.dr.get_bars_df(ticker, self.tf, self.start, self.end)
                     if df.shape[0] == 0:
                         continue
                     self.dfs[ticker[0]] = df
@@ -265,36 +265,11 @@ class CointegrationPairsFinder:
         return len(self.pairs)
 
     def send_found_pairs(self):
+        tb = TelegramBot()
+        tb.send_message("{} pairs found.".format(len(self.pairs)))
+
         for pair in self.pairs:
             t1, t2 = pair
             title = "{}_{} pair".format(t1, t2)
             fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-            tb = TelegramBot()
             tb.send_document(title, fname)
-
-
-if __name__ == "__main__":
-    tz = pytz.timezone("UTC")
-    end = datetime.now() - timedelta(days=1)
-    start = end - timedelta(days=150)
-    start = tz.localize(start)
-    end = tz.localize(end)
-
-    tu = TinkoffUniverse()
-    tdr = TinkoffDataReader()
-    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end, tu, tdr)
-    print("Reading dataframes...")
-    cpf._read_dfs()
-    print("Filtering by number of candles...")
-    cpf._filter_by_num_candles()
-    print("Filtering by volume...")
-    cpf._filter_by_volume()
-    print("Finding pairs...")
-    cpf._find_pairs()
-    print("Sending to Telegram...")
-    cpf.send_found_pairs()
-
-    num_tickers = cpf.get_num_tickers()
-    num_pairs = cpf.get_num_pairs()
-    print("Number of tickers = {}".format(num_tickers))
-    print("Number of pairs = {}".format(num_pairs))
