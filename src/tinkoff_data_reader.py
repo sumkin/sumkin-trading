@@ -1,5 +1,4 @@
 import sys
-import time
 import pytz
 import pandas as pd
 from datetime import datetime, timedelta
@@ -9,7 +8,6 @@ from tinkoff.invest.schemas import CandleSource
 sys.path.append("..")
 
 from data_reader import DataReader
-from tinkoff_tokens import *
 from tinkoff_universe import *
 from time_frame import *
 
