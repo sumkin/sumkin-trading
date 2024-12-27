@@ -13,9 +13,21 @@ if __name__ == "__main__":
     start = tz.localize(start)
     end = tz.localize(end)
 
+    params = {
+        "MIN_MONEY_VOLUME": 10e6,
+        "MIN_MEAN_PRICE_RATIO": 0.5,
+        "MAX_MEAN_PRICE_RATIO": 2,
+        "MIN_HEDGE_RATIO": 0.5,
+        "MAX_HEDGE_RATIO": 2,
+        "MAX_ADFULLER": 0.005,
+        "MIN_HOMOSCED_P_VAL": 0.05,
+        "MIN_ZERO_MEAN_P_VAL": 0.01,
+        "MIN_STD_RESID": 10
+    }
+
     tu = TinkoffUniverse()
     tdr = TinkoffDataReader()
-    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end, tu, tdr)
+    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_DAY, start, end, tu, tdr, params)
     print("Reading dataframes...")
     cpf._read_dfs()
     print("Filtering by number of candles...")

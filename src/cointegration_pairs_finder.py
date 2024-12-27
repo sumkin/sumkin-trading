@@ -13,8 +13,6 @@ from defs import ROOT_FOLDER
 from time_frame import TimeFrame
 from universe import Universe
 from data_reader import DataReader
-from tinkoff_universe import TinkoffUniverse
-from tinkoff_data_reader import TinkoffDataReader
 from cointegration_pair_checker import CointegrationPairChecker
 from telegram_bot import TelegramBot
 
@@ -25,12 +23,14 @@ class CointegrationPairsFinder:
                  start: datetime,
                  end: datetime,
                  u: Universe,
-                 dr: DataReader):
+                 dr: DataReader,
+                 params: dict):
         self.tf = tf
         self.start = start
         self.end = end
         self.u = u
         self.dr = dr
+        self.params = params
 
     def _read_dfs(self):
         tickers = self.u.get_tickers()
@@ -88,7 +88,7 @@ class CointegrationPairsFinder:
                 df_is = df[:int(df.shape[0] * 0.75)]
                 df_os = df[int(df.shape[0]  * 0.75):]
 
-                cpc = CointegrationPairChecker(df_is)
+                cpc = CointegrationPairChecker(df_is, self.params)
                 res, hedge_ratio, intercept, resid, info = cpc.cointegrate()
                 if not res:
                     continue
