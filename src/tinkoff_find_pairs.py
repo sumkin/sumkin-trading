@@ -25,7 +25,7 @@ if __name__ == "__main__":
     print("Finding pairs...")
     cpf._find_pairs()
     print("Sending to Telegram...")
-    cpf.send_found_pairs()
+    cpf.send_found_pairs("Tinkoff")
 
     num_tickers = cpf.get_num_tickers()
     num_pairs = cpf.get_num_pairs()

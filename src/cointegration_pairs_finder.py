@@ -36,31 +36,12 @@ class CointegrationPairsFinder:
         tickers = self.u.get_tickers()
 
         self.dfs = {}
-        pickle_fname = ROOT_FOLDER + "/cache/cointegration_pairs_finder/dfs.pickle"
-        if False: #os.path.isfile(pickle_fname):
-            with open(pickle_fname, "rb") as handle:
-                self.dfs = pickle.load(handle)
-        else:
-            parallel = False
-            if parallel:
-                with WorkerPool(n_jobs=os.cpu_count()) as pool:
-                    f = lambda figi: self.dr.get_bars_df(ticker, self.tf, self.start, self.end)
-                    dfs = pool.map(f, [ticker for ticker in tickers])
-                    assert len(tickers) == len(dfs)
-                    self.dfs = {}
-                    for i in range(len(tickers)):
-                        self.dfs[tickers[i][0]] = dfs[i]
-                    with open(pickle_fname, "wb") as handle:
-                        pickle.dump(self.dfs, handle)
-            else:
-                for i, ticker in enumerate(tickers):
-                    df = self.dr.get_bars_df(ticker, self.tf, self.start, self.end)
-                    if df.shape[0] == 0:
-                        continue
-                    self.dfs[ticker[0]] = df
-                    print(i, len(tickers), ticker, df.shape[0])
-                with open(pickle_fname, "wb") as handle:
-                    pickle.dump(self.dfs, handle)
+        for i, ticker in enumerate(tickers):
+            df = self.dr.get_bars_df(ticker, self.tf, self.start, self.end)
+            if df.shape[0] == 0:
+                continue
+            self.dfs[ticker] = df
+            print(i, len(tickers), ticker, df.shape[0])
 
     def _filter_by_num_candles(self):
         """
@@ -264,12 +245,12 @@ class CointegrationPairsFinder:
     def get_num_pairs(self):
         return len(self.pairs)
 
-    def send_found_pairs(self):
+    def send_found_pairs(self, source):
         tb = TelegramBot()
-        tb.send_message("{} pairs found.".format(len(self.pairs)))
+        tb.send_message("{}: {} pairs found.".format(source, len(self.pairs)))
 
         for pair in self.pairs:
             t1, t2 = pair
-            title = "{}_{} pair".format(t1, t2)
+            title = "{}: {}_{} pair".format(source, t1, t2)
             fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
             tb.send_document(title, fname)
