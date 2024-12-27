@@ -78,10 +78,10 @@ if __name__ == "__main__":
 
     tu = TinkoffUniverse()
     tickers = tu.get_tickers()
-    for ticker, figi in tickers:
-        print(ticker, figi)
+    for ticker in tickers:
+        print(ticker)
         tdr = TinkoffDataReader()
-        df = tdr.get_bars_df(figi, TimeFrame.INTERVAL_HOUR, start)
+        df = tdr.get_bars_df(ticker, TimeFrame.INTERVAL_HOUR, start)
         print(df.head(5))
         print(df.tail(5))
 
