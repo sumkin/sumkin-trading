@@ -8,11 +8,13 @@ from kraken_data_reader import KrakenDataReader
 from cointegration_pairs_finder import CointegrationPairsFinder
 
 if __name__ == "__main__":
+    interval = TimeFrame.INTERVAL_HOUR
+    mins = TimeFrame.get_num_minutes(interval)
     end = datetime.now()
-    start = end - timedelta(minutes=5*150)
+    start = end - timedelta(minutes=mins*150)
 
     params = {
-        "MIN_MONEY_VOLUME": 1000,
+        "MIN_MONEY_VOLUME": 5000,
         "MIN_MEAN_PRICE_RATIO": 0.1,
         "MAX_MEAN_PRICE_RATIO": 1.0,
         "MIN_HEDGE_RATIO": 0.2,
@@ -25,7 +27,7 @@ if __name__ == "__main__":
 
     ku = KrakenUniverse()
     kdr = KrakenDataReader()
-    cpf = CointegrationPairsFinder(TimeFrame.INTERVAL_5_MIN, start, end, ku, kdr, params)
+    cpf = CointegrationPairsFinder(interval, start, end, ku, kdr, params)
     print("Reading dataframes...")
     cpf._read_dfs()
     print("Filtering by number of candles...")
