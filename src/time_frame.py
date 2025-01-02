@@ -3,9 +3,10 @@ from tinkoff.invest import CandleInterval
 class TimeFrame:
     INTERVAL_1_MIN = 1
     INTERVAL_5_MIN = 2
-    INTERVAL_HOUR = 3
-    INTERVAL_2_HOUR = 4
-    INTERVAL_DAY = 5
+    INTERVAL_15_MIN = 3
+    INTERVAL_HOUR = 4
+    INTERVAL_2_HOUR = 5
+    INTERVAL_DAY = 6
 
     @staticmethod
     def get_tinkoff_interval(tf):
@@ -26,6 +27,8 @@ class TimeFrame:
             return 1
         elif tf == TimeFrame.INTERVAL_5_MIN:
             return 5
+        elif tf == TimeFrame.INTERVAL_15_MIN:
+            return 15
         elif tf == TimeFrame.INTERVAL_HOUR:
             return 60
         elif tf == TimeFrame.INTERVAL_2_HOUR:
