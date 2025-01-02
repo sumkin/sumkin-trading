@@ -93,8 +93,11 @@ class CointegrationPairsFinder:
                 if not res:
                     continue
 
-                df_os["resid"] = df_os["close2"] - hedge_ratio * df_os["close1"] - intercept
+                df_os.loc[:, "resid"] = df_os["close2"] - hedge_ratio * df_os["close1"] - intercept
                 resid_std = np.std(resid)
+
+                trade_res = self.get_trade_result(df_is, df_os, resid)
+                info["trade_res"] = trade_res
 
                 chart1_is = go.Scatter(
                     x=df_is["datetime"],
@@ -237,7 +240,31 @@ class CointegrationPairsFinder:
 
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({"std": resid_std})
-                print("\t", t1, t2, resid_std)
+                print("\t", t1, t2, trade_res)
+
+    def get_trade_result(self, df_is, df_os, resid):
+        resid = resid.to_list()
+        resid_std = np.std(resid)
+        last_val = resid[-1]
+        if -resid_std <= last_val and last_val <= resid_std:
+            return "no_trade"
+
+        resid_out = df_os["resid"].to_list()
+        if last_val < -resid_std:
+            for e in resid_out:
+                if e < -3 * resid_std:
+                    return "loss"
+                if e > 0:
+                    return "win"
+
+        if last_val > resid_std:
+            for e in resid_out:
+                if e > 3 * resid_std:
+                    return "loss"
+                if e < 0:
+                    return "win"
+
+        return "unkown"
 
     def get_num_tickers(self):
         return len(self.dfs.keys())
