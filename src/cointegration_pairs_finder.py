@@ -98,6 +98,8 @@ class CointegrationPairsFinder:
 
                 trade_res = self.get_trade_result(df_is, df_os, resid)
                 info["trade_res"] = trade_res
+                if trade_res == "no_trade":
+                    continue
 
                 chart1_is = go.Scatter(
                     x=df_is["datetime"],
