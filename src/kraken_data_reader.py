@@ -1,11 +1,13 @@
 import sys
 import pytz
+import time
 import json
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
 sys.path.append("..")
 
+from kraken_api_keys import KRAKEN_API_KEY
 from data_reader import DataReader
 from kraken_universe import *
 from time_frame import *
@@ -38,9 +40,16 @@ class KrakenDataReader(DataReader):
         url = "https://api.kraken.com/0/public/OHLC?pair={}&interval={}&since={}".format(ticker, interval, start_ts)
         payload = {}
         headers = {
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "API-Key": KRAKEN_API_KEY
         }
-        response = requests.request("GET", url, headers=headers, data=payload)
+        response = None
+        for _ in range(5):
+            response = requests.request("GET", url, headers=headers, data=payload)
+            if response.status_code == 200:
+                break
+            time.sleep(3)
+        assert response is not None
         if ticker in json.loads(response.text)["result"].keys():
             data = json.loads(response.text)["result"][ticker]
             for d in data:
