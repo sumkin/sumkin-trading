@@ -96,9 +96,10 @@ class CointegrationPairsFinder:
                 df_os.loc[:, "resid"] = df_os["close2"] - hedge_ratio * df_os["close1"] - intercept
                 resid_std = np.std(resid)
 
-                trade_res, ret = self.get_trade_result(df_is, df_os, resid)
+                trade_res, ret, duration = self.get_trade_result(df_is, df_os, resid)
                 info["trade_res"] = trade_res
                 info["return"] = ret
+                info["duration"] = duration
                 if trade_res == "no_trade":
                     continue
 
@@ -250,22 +251,22 @@ class CointegrationPairsFinder:
         resid_std = np.std(resid)
         last_val = resid[-1]
         if -resid_std <= last_val and last_val <= resid_std:
-            return "no_trade", None
+            return "no_trade", None, None
 
         resid_out = df_os["resid"].to_list()
         if last_val < -resid_std:
-            for e in resid_out:
+            for i, e in enumerate(resid_out):
                 if e < -3 * resid_std:
-                    return "loss", -abs((e - last_val) / last_val)
+                    return "loss", -abs((e - last_val) / last_val), i
                 if e > resid_std:
-                    return "win", abs((e - last_val) / last_val)
+                    return "win", abs((e - last_val) / last_val), i
 
         if last_val > resid_std:
-            for e in resid_out:
+            for i, e in enumerate(resid_out):
                 if e > 3 * resid_std:
-                    return "loss", -abs((last_val - e) / last_val)
+                    return "loss", -abs((last_val - e) / last_val), i
                 if e < -resid_std:
-                    return "win", abs((last_val - e) / last_val)
+                    return "win", abs((last_val - e) / last_val), i
 
         return "unkown", None
 
