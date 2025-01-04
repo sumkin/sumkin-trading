@@ -52,6 +52,14 @@
                         {{ info["trade_res"] }}
                     </td>
                 </tr>
+                <tr>
+                    <td style="text-align:right">
+                        Return:
+                    </td>
+                    <td style="text-align:left">
+                        {{ (info["return"] * 100)|round|int }}%
+                    </td>
+                </tr>
             </table>
          </p>
     </body>
