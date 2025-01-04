@@ -18,6 +18,9 @@ from telegram_bot import TelegramBot
 
 class CointegrationPairsFinder:
 
+    NUM_STD_TO_ENTER = 1.5
+    NUM_STD_TO_EXIT = 3
+
     def __init__(self,
                  tf: TimeFrame,
                  start: datetime,
@@ -203,8 +206,8 @@ class CointegrationPairsFinder:
                                         [{"colspan": 2}, None],
                                         [{}, {}]
                                     ])
-                fig.update_yaxes(range=[min(-3 * resid_std, resid_min), max(3 * resid_std, resid_max)], row=4, col=1)
-                fig.update_yaxes(range=[min(-3 * resid_std, resid_min), max(3 * resid_std, resid_max)], row=4, col=2)
+                fig.update_yaxes(range=[min(-self.NUM_STD_TO_EXIT * resid_std, resid_min), max(self.NUM_STD_TO_EXIT * resid_std, resid_max)], row=4, col=1)
+                fig.update_yaxes(range=[min(-self.NUM_STD_TO_EXIT * resid_std, resid_min), max(self.NUM_STD_TO_EXIT * resid_std, resid_max)], row=4, col=2)
                 fig.update_xaxes(range=[regres_min, regres_max], row=3, col=1)
                 fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=1)
                 fig.update_xaxes(range=[regres_min, regres_max], row=3, col=2)
@@ -220,15 +223,15 @@ class CointegrationPairsFinder:
                 fig.add_trace(regres_is, 3, 1)
                 fig.add_trace(regres_os, 3, 1)
                 fig.add_trace(resid_is, 4, 1)
-                fig.add_hline(y=3 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-3 * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=self.NUM_STD_TO_EXIT * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=self.NUM_STD_TO_ENTER * resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-self.NUM_STD_TO_ENTER * resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-self.NUM_STD_TO_EXIT * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
                 fig.add_trace(resid_os, 4, 2)
-                fig.add_hline(y=3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-3 * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=self.NUM_STD_TO_EXIT * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                fig.add_hline(y=self.NUM_STD_TO_ENTER * resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-self.NUM_STD_TO_ENTER * resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
+                fig.add_hline(y=-self.NUM_STD_TO_EXIT * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
 
                 # Write html file.
                 output_html_path = fname
@@ -250,22 +253,22 @@ class CointegrationPairsFinder:
         resid = resid.to_list()
         resid_std = np.std(resid)
         last_val = resid[-1]
-        if -resid_std <= last_val and last_val <= resid_std:
+        if -self.NUM_STD_TO_ENTER * resid_std <= last_val and last_val <= self.NUM_STD_TO_ENTER * resid_std:
             return "no_trade", None, None
 
         resid_out = df_os["resid"].to_list()
         if last_val < -resid_std:
             for i, e in enumerate(resid_out):
-                if e < -3 * resid_std:
+                if e < -self.NUM_STD_TO_EXIT * resid_std:
                     return "loss", -abs((e - last_val) / last_val), i
-                if e > resid_std:
+                if e > 0.0:
                     return "win", abs((e - last_val) / last_val), i
 
         if last_val > resid_std:
             for i, e in enumerate(resid_out):
-                if e > 3 * resid_std:
+                if e > self.NUM_STD_TO_EXIT * resid_std:
                     return "loss", -abs((last_val - e) / last_val), i
-                if e < -resid_std:
+                if e < 0.0:
                     return "win", abs((last_val - e) / last_val), i
 
         return "unkown", None
