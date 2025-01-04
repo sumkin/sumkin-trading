@@ -256,14 +256,14 @@ class CointegrationPairsFinder:
             for e in resid_out:
                 if e < -3 * resid_std:
                     return "loss"
-                if e > 0:
+                if e > resid_std:
                     return "win"
 
         if last_val > resid_std:
             for e in resid_out:
                 if e > 3 * resid_std:
                     return "loss"
-                if e < 0:
+                if e < -resid_std:
                     return "win"
 
         return "unkown"
