@@ -246,7 +246,11 @@ class CointegrationPairsFinder:
                         output_file.write(j2_template.render(plotly_jinja_data))
 
                 self.pairs.append([t1, t2])
-                self.pairs_info.append({"std": resid_std})
+                self.pairs_info.append({
+                    "std": resid_std,
+                    "trade_res": trade_res,
+                    "duration": duration
+                })
                 print("\t", t1, t2, trade_res)
 
     def get_trade_result(self, df_is, df_os, resid):
@@ -279,9 +283,27 @@ class CointegrationPairsFinder:
     def get_num_pairs(self):
         return len(self.pairs)
 
+    def get_num_wins(self):
+        res = 0
+        for e in self.pairs_info:
+            if e["trade_res"] == "win":
+                res += 1
+        return res
+
+    def get_num_losses(self):
+        res = 0
+        for e in self.pairs_info:
+            if e["trade_res"] == "loss":
+                res += 1
+        return res
+
+
     def send_found_pairs(self, source):
         tb = TelegramBot()
-        tb.send_message("{}: {} pairs found.".format(source, len(self.pairs)))
+        tb.send_message("{}: {} pairs found. {} wins, {} losses.".format(source,
+                                                                         self.get_num_pairs(),
+                                                                         self.get_num_wins(),
+                                                                         self.get_num_losses()))
 
         for pair in self.pairs:
             t1, t2 = pair
