@@ -14,7 +14,7 @@ if __name__ == "__main__":
     start = end - timedelta(minutes=mins*150)
 
     params = {
-        "MIN_MONEY_VOLUME": 5000,
+        "MIN_MONEY_VOLUME": 3000,
         "MIN_MEAN_PRICE_RATIO": 0.1,
         "MAX_MEAN_PRICE_RATIO": 1.0,
         "MIN_HEDGE_RATIO": 0.2,

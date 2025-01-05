@@ -254,7 +254,7 @@ class CointegrationPairsFinder:
         resid_std = np.std(resid)
         last_val = resid[-1]
         if -self.NUM_STD_TO_ENTER * resid_std <= last_val and last_val <= self.NUM_STD_TO_ENTER * resid_std:
-            return "no_trade", None, None
+            return "no_trade", 0, 0
 
         resid_out = df_os["resid"].to_list()
         if last_val < -resid_std:
@@ -271,7 +271,7 @@ class CointegrationPairsFinder:
                 if e < 0.0:
                     return "win", abs((last_val - e) / last_val), i
 
-        return "unkown", None
+        return "unkown", 0, 0
 
     def get_num_tickers(self):
         return len(self.dfs.keys())
