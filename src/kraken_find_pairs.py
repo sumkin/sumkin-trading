@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     ku = KrakenUniverse()
     kdr = KrakenDataReader()
-    cpf = CointegrationPairsFinder(interval, start, end, ku, kdr, params)
+    cpf = CointegrationPairsFinder(interval, start, end, ku, kdr, params, create_html=False)
     print("Reading dataframes...")
     cpf._read_dfs()
     print("Filtering by number of candles...")

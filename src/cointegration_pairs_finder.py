@@ -27,13 +27,15 @@ class CointegrationPairsFinder:
                  end: datetime,
                  u: Universe,
                  dr: DataReader,
-                 params: dict):
+                 params: dict,
+                 create_html = True):
         self.tf = tf
         self.start = start
         self.end = end
         self.u = u
         self.dr = dr
         self.params = params
+        self.create_html = create_html
 
     def _read_dfs(self):
         tickers = self.u.get_tickers()
@@ -106,144 +108,145 @@ class CointegrationPairsFinder:
                 if trade_res == "no_trade":
                     continue
 
-                chart1_is = go.Scatter(
-                    x=df_is["datetime"],
-                    y=df_is["close1"],
-                    mode="lines",
-                    name=t1,
-                    marker=dict(color="orangered")
-                )
-                chart1_os = go.Scatter(
-                    x=df_os["datetime"],
-                    y=df_os["close1"],
-                    mode="lines",
-                    name=t1,
-                    marker=dict(color="orangered")
-                )
-                chart2_is = go.Scatter(
-                    x=df_is["datetime"],
-                    y=df_is["close2"],
-                    mode="lines",
-                    name=t2,
-                    marker=dict(color="darkred")
-                )
-                chart2_os = go.Scatter(
-                    x=df_os["datetime"],
-                    y=df_os["close2"],
-                    mode="lines",
-                    name=t2,
-                    marker=dict(color="darkred")
-                )
-                volume1_is = go.Scatter(
-                    x=df_is["datetime"],
-                    y=df_is["volume1"],
-                    mode="lines",
-                    name="{} volume".format(t1),
-                    marker=dict(color="lightgreen")
-                )
-                volume1_os = go.Scatter(
-                    x=df_os["datetime"],
-                    y=df_os["volume1"],
-                    mode="lines",
-                    name=t1,
-                    marker=dict(color="lightgreen")
-                )
-                volume2_is = go.Scatter(
-                    x=df_is["datetime"],
-                    y=df_is["volume2"],
-                    mode="lines",
-                    name="{} volume".format(t2),
-                    marker=dict(color="darkgreen")
-                )
-                volume2_os = go.Scatter(
-                    x=df_os["datetime"],
-                    y=df_os["volume2"],
-                    mode="lines",
-                    name="{} volume".format(t2),
-                    marker=dict(color="darkgreen")
-                )
-                regres_is = go.Scatter(
-                    x=df_is["close1"],
-                    y=df_is["close2"],
-                    mode="markers",
-                    marker=dict(color="orange"),
-                    name="{}-{} prices".format(t1, t2)
-                )
-                regres_os = go.Scatter(
-                    x=df_os["close1"],
-                    y=df_os["close2"],
-                    mode="markers",
-                    marker=dict(color="purple"),
-                    name="{}-{} prices".format(t1, t2)
-                )
-                resid_min = min(min(resid), min(df_os["resid"]))
-                resid_max = max(max(resid), max(df_os["resid"]))
-                regres_min = min(min(df_is["close1"].min(), df_is["close2"].min()), min(df_os["close1"].min(), df_os["close2"].min()))
-                regres_max = max(max(df_is["close1"].max(), df_is["close2"].max()), max(df_os["close1"].max(), df_os["close2"].max()))
-                resid_is = go.Scatter(
-                    x=df_is["datetime"],
-                    y=resid,
-                    mode="lines",
-                    name="residuals",
-                    marker=dict(color="blue")
-                )
-                resid_os = go.Scatter(
-                    x=df_os["datetime"],
-                    y=df_os["resid"],
-                    mode="lines",
-                    name="residuals",
-                    marker=dict(color="blue")
-                )
-                fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-                fig = make_subplots(rows=4,
-                                    cols=2,
-                                    shared_yaxes=True,
-                                    horizontal_spacing=0.0025,
-                                    column_widths=[750, 250],
-                                    specs=[
-                                        [{}, {}],
-                                        [{}, {}],
-                                        [{"colspan": 2}, None],
-                                        [{}, {}]
-                                    ])
-                fig.update_yaxes(range=[min(-self.NUM_STD_TO_EXIT * resid_std, resid_min), max(self.NUM_STD_TO_EXIT * resid_std, resid_max)], row=4, col=1)
-                fig.update_yaxes(range=[min(-self.NUM_STD_TO_EXIT * resid_std, resid_min), max(self.NUM_STD_TO_EXIT * resid_std, resid_max)], row=4, col=2)
-                fig.update_xaxes(range=[regres_min, regres_max], row=3, col=1)
-                fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=1)
-                fig.update_xaxes(range=[regres_min, regres_max], row=3, col=2)
-                fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=2)
-                fig.add_trace(chart1_is, 1, 1)
-                fig.add_trace(chart2_is, 1, 1)
-                fig.add_trace(chart1_os, 1, 2)
-                fig.add_trace(chart2_os, 1, 2)
-                fig.add_trace(volume1_is, 2, 1)
-                fig.add_trace(volume2_is, 2, 1)
-                fig.add_trace(volume1_os, 2, 2)
-                fig.add_trace(volume2_os, 2, 2)
-                fig.add_trace(regres_is, 3, 1)
-                fig.add_trace(regres_os, 3, 1)
-                fig.add_trace(resid_is, 4, 1)
-                fig.add_hline(y=self.NUM_STD_TO_EXIT * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=self.NUM_STD_TO_ENTER * resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-self.NUM_STD_TO_ENTER * resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-self.NUM_STD_TO_EXIT * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
-                fig.add_trace(resid_os, 4, 2)
-                fig.add_hline(y=self.NUM_STD_TO_EXIT * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
-                fig.add_hline(y=self.NUM_STD_TO_ENTER * resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-self.NUM_STD_TO_ENTER * resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
-                fig.add_hline(y=-self.NUM_STD_TO_EXIT * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                if self.create_html:
+                    chart1_is = go.Scatter(
+                        x=df_is["datetime"],
+                        y=df_is["close1"],
+                        mode="lines",
+                        name=t1,
+                        marker=dict(color="orangered")
+                    )
+                    chart1_os = go.Scatter(
+                        x=df_os["datetime"],
+                        y=df_os["close1"],
+                        mode="lines",
+                        name=t1,
+                        marker=dict(color="orangered")
+                    )
+                    chart2_is = go.Scatter(
+                        x=df_is["datetime"],
+                        y=df_is["close2"],
+                        mode="lines",
+                        name=t2,
+                        marker=dict(color="darkred")
+                    )
+                    chart2_os = go.Scatter(
+                        x=df_os["datetime"],
+                        y=df_os["close2"],
+                        mode="lines",
+                        name=t2,
+                        marker=dict(color="darkred")
+                    )
+                    volume1_is = go.Scatter(
+                        x=df_is["datetime"],
+                        y=df_is["volume1"],
+                        mode="lines",
+                        name="{} volume".format(t1),
+                        marker=dict(color="lightgreen")
+                    )
+                    volume1_os = go.Scatter(
+                        x=df_os["datetime"],
+                        y=df_os["volume1"],
+                        mode="lines",
+                        name=t1,
+                        marker=dict(color="lightgreen")
+                    )
+                    volume2_is = go.Scatter(
+                        x=df_is["datetime"],
+                        y=df_is["volume2"],
+                        mode="lines",
+                        name="{} volume".format(t2),
+                        marker=dict(color="darkgreen")
+                    )
+                    volume2_os = go.Scatter(
+                        x=df_os["datetime"],
+                        y=df_os["volume2"],
+                        mode="lines",
+                        name="{} volume".format(t2),
+                        marker=dict(color="darkgreen")
+                    )
+                    regres_is = go.Scatter(
+                        x=df_is["close1"],
+                        y=df_is["close2"],
+                        mode="markers",
+                        marker=dict(color="orange"),
+                        name="{}-{} prices".format(t1, t2)
+                    )
+                    regres_os = go.Scatter(
+                        x=df_os["close1"],
+                        y=df_os["close2"],
+                        mode="markers",
+                        marker=dict(color="purple"),
+                        name="{}-{} prices".format(t1, t2)
+                    )
+                    resid_min = min(min(resid), min(df_os["resid"]))
+                    resid_max = max(max(resid), max(df_os["resid"]))
+                    regres_min = min(min(df_is["close1"].min(), df_is["close2"].min()), min(df_os["close1"].min(), df_os["close2"].min()))
+                    regres_max = max(max(df_is["close1"].max(), df_is["close2"].max()), max(df_os["close1"].max(), df_os["close2"].max()))
+                    resid_is = go.Scatter(
+                        x=df_is["datetime"],
+                        y=resid,
+                        mode="lines",
+                        name="residuals",
+                        marker=dict(color="blue")
+                    )
+                    resid_os = go.Scatter(
+                        x=df_os["datetime"],
+                        y=df_os["resid"],
+                        mode="lines",
+                        name="residuals",
+                        marker=dict(color="blue")
+                    )
+                    fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
+                    fig = make_subplots(rows=4,
+                                        cols=2,
+                                        shared_yaxes=True,
+                                        horizontal_spacing=0.0025,
+                                        column_widths=[750, 250],
+                                       specs=[
+                                            [{}, {}],
+                                            [{}, {}],
+                                            [{"colspan": 2}, None],
+                                            [{}, {}]
+                                        ])
+                    fig.update_yaxes(range=[min(-self.NUM_STD_TO_EXIT * resid_std, resid_min), max(self.NUM_STD_TO_EXIT * resid_std, resid_max)], row=4, col=1)
+                    fig.update_yaxes(range=[min(-self.NUM_STD_TO_EXIT * resid_std, resid_min), max(self.NUM_STD_TO_EXIT * resid_std, resid_max)], row=4, col=2)
+                    fig.update_xaxes(range=[regres_min, regres_max], row=3, col=1)
+                    fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=1)
+                    fig.update_xaxes(range=[regres_min, regres_max], row=3, col=2)
+                    fig.update_yaxes(range=[regres_min, regres_max], scaleanchor="x", scaleratio=1, row=3, col=2)
+                    fig.add_trace(chart1_is, 1, 1)
+                    fig.add_trace(chart2_is, 1, 1)
+                    fig.add_trace(chart1_os, 1, 2)
+                    fig.add_trace(chart2_os, 1, 2)
+                    fig.add_trace(volume1_is, 2, 1)
+                    fig.add_trace(volume2_is, 2, 1)
+                    fig.add_trace(volume1_os, 2, 2)
+                    fig.add_trace(volume2_os, 2, 2)
+                    fig.add_trace(regres_is, 3, 1)
+                    fig.add_trace(regres_os, 3, 1)
+                    fig.add_trace(resid_is, 4, 1)
+                    fig.add_hline(y=self.NUM_STD_TO_EXIT * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                    fig.add_hline(y=self.NUM_STD_TO_ENTER * resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
+                    fig.add_hline(y=-self.NUM_STD_TO_ENTER * resid_std, row=4, col=1, line_dash="dash", line_color="green", line_width=1)
+                    fig.add_hline(y=-self.NUM_STD_TO_EXIT * resid_std, row=4, col=1, line_dash="dash", line_color="red", line_width=1)
+                    fig.add_trace(resid_os, 4, 2)
+                    fig.add_hline(y=self.NUM_STD_TO_EXIT * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
+                    fig.add_hline(y=self.NUM_STD_TO_ENTER * resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
+                    fig.add_hline(y=-self.NUM_STD_TO_ENTER * resid_std, row=4, col=2, line_dash="dash", line_color="green", line_width=1)
+                    fig.add_hline(y=-self.NUM_STD_TO_EXIT * resid_std, row=4, col=2, line_dash="dash", line_color="red", line_width=1)
 
-                # Write html file.
-                output_html_path = fname
-                input_template_path = ROOT_FOLDER + "/templates/cointegration_pair.html"
-                plotly_jinja_data = {
-                    "fig": fig.to_html(full_html=False, default_height=1000),
-                    "info": info
-                }
-                with open(output_html_path, "w", encoding="utf-8") as output_file:
-                    with open(input_template_path) as template_file:
-                        j2_template = Template(template_file.read())
-                        output_file.write(j2_template.render(plotly_jinja_data))
+                    # Write html file.
+                    output_html_path = fname
+                    input_template_path = ROOT_FOLDER + "/templates/cointegration_pair.html"
+                    plotly_jinja_data = {
+                        "fig": fig.to_html(full_html=False, default_height=1000),
+                        "info": info
+                    }
+                    with open(output_html_path, "w", encoding="utf-8") as output_file:
+                        with open(input_template_path) as template_file:
+                            j2_template = Template(template_file.read())
+                            output_file.write(j2_template.render(plotly_jinja_data))
 
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({
@@ -305,8 +308,9 @@ class CointegrationPairsFinder:
                                                                          self.get_num_wins(),
                                                                          self.get_num_losses()))
 
-        for pair in self.pairs:
-            t1, t2 = pair
-            title = "{}: {}_{} pair".format(source, t1, t2)
-            fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
-            tb.send_document(title, fname)
+        if self.create_html:
+            for pair in self.pairs:
+                t1, t2 = pair
+                title = "{}: {}_{} pair".format(source, t1, t2)
+                fname = ROOT_FOLDER + "/output/cointegration_pairs_finder/{}_{}.html".format(t1, t2)
+                tb.send_document(title, fname)
