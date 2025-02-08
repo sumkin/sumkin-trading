@@ -300,7 +300,6 @@ class CointegrationPairsFinder:
                 res += 1
         return res
 
-
     def send_found_pairs(self, source):
         tb = TelegramBot()
         tb.send_message("{}: {} pairs found. {} wins, {} losses.".format(source,

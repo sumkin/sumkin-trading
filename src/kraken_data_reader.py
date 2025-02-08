@@ -44,10 +44,13 @@ class KrakenDataReader(DataReader):
             "API-Key": KRAKEN_API_KEY
         }
         response = None
-        for _ in range(5):
-            response = requests.request("GET", url, headers=headers, data=payload)
-            if response.status_code == 200:
-                break
+        for i in range(15):
+            try:
+                response = requests.request("GET", url, headers=headers, data=payload, timeout=5)
+                if response.status_code == 200:
+                    break
+            except:
+                pass
             time.sleep(3)
         assert response is not None
         if ticker in json.loads(response.text)["result"].keys():
