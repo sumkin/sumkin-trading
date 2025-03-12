@@ -35,7 +35,7 @@ if __name__ == "__main__":
     print("Filtering by volume...")
     cpf._filter_by_volume()
     print("Finding pairs...")
-    cpf._find_pairs()
+    cpf._find_pairs_split()
     print("Sending to Telegram...")
     cpf.send_found_pairs("Kraken")
 

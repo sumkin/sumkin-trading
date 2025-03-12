@@ -78,7 +78,7 @@ class CointegrationPairsFinder:
         for ticker in to_remove:
             del self.dfs[ticker]
 
-    def _find_pairs(self):
+    def _find_pairs_split(self):
         self.pairs = []
         self.pairs_info = []
         tickers = list(self.dfs.keys())
