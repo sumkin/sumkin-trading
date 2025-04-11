@@ -78,6 +78,32 @@ class CointegrationPairsFinder:
         for ticker in to_remove:
             del self.dfs[ticker]
 
+    def _find_pairs(self):
+        self.pairs = []
+        self.pairs_info = []
+        tickers = list(self.dfs.keys())
+        for i in range(len(tickers)):
+            t1 = tickers[i]
+            for j in range(i + 1, len(tickers)):
+                t2 = tickers[j]
+                df = pd.merge(self.dfs[t1], self.dfs[t2], on="datetime", suffixes=("1", "2")).dropna()
+                df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
+
+                cpc = CointegrationPairChecker(df, self.params)
+                res, hedge_ratio, intercept, resid, info = cpc.cointegrate()
+                if not res:
+                    continue
+
+                resid_std = np.std(resid)
+
+                self.pairs.append([t1, t2])
+                self.pairs_info.append({
+                    "std": resid_std,
+                    "hedge_ratio": hedge_ratio,
+                    "intercept": intercept
+                })
+                print("\t", t1, t2)
+
     def _find_pairs_split(self):
         self.pairs = []
         self.pairs_info = []
