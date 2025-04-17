@@ -5,8 +5,9 @@ from time_frame import TimeFrame
 from kraken_universe import KrakenUniverse 
 from kraken_data_reader import KrakenDataReader 
 from cointegration_pairs_finder import CointegrationPairsFinder
+from trades_db_manager import TradesDbManager
 
-if __name__ == "__main__":
+def find_pairs():
     interval = TimeFrame.INTERVAL_HOUR 
     mins = TimeFrame.get_num_minutes(interval)
     end = datetime.now()
@@ -36,7 +37,32 @@ if __name__ == "__main__":
     print("Finding pairs...")
     cpf._find_pairs()
 
-    num_tickers = cpf.get_num_tickers()
-    num_pairs = cpf.get_num_pairs()
-    print("num_tickers = {}".format(num_tickers))
-    print("num_pairs = {}".format(num_pairs))
+    return cpf.pairs, cpf.pairs_info
+
+def enter_position(pair, pair_info):
+    symb1, symb2 = pair
+    sigma = pair_info["resid_std"]
+    hedge = pair_info["hedge_ratio"]
+    coeff = pair_info["intercept"]
+    p1 = pair_info["p1"]
+    p2 = pair_info["p2"]
+
+    tdm = TradesDbManager()
+
+    resid = p2 - hedge * p1 - coeff
+    if abs(resid) > CointegrationPairsFinder.NUM_STD_TO_ENTER * sigma:
+        if resid > 0:
+            # Buy symb1 and sell symb2.
+            if not tdm.is_pair_active(symb1, symb2):
+                tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "BUY", 1.0, p1, p2)
+        else:
+            # Sell symb1 and buy symb2.
+            if not tdm.is_pair_active(symb1, symb2):
+                tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "SELL", 1.0, p1, p2)
+
+if __name__ == "__main__":
+    pairs, pairs_info = find_pairs()
+    assert len(pairs) == len(pairs_info)
+    n = len(pairs)
+    for i in range(n):
+        entered = enter_position(pairs[i], pairs_info[i])

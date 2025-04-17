@@ -94,13 +94,17 @@ class CointegrationPairsFinder:
                 if not res:
                     continue
 
+                resid_mean = np.mean(resid)
                 resid_std = np.std(resid)
 
                 self.pairs.append([t1, t2])
                 self.pairs_info.append({
-                    "std": resid_std,
+                    "resid_mean": resid_mean,
+                    "resid_std": resid_std,
                     "hedge_ratio": hedge_ratio,
-                    "intercept": intercept
+                    "intercept": intercept,
+                    "p1": df["close1"].to_list()[-1],
+                    "p2": df["close2"].to_list()[-1]
                 })
                 print("\t", t1, t2)
 
@@ -290,19 +294,19 @@ class CointegrationPairsFinder:
             return "no_trade", 0, 0
 
         resid_out = df_os["resid"].to_list()
-        if last_val < -resid_std:
+        if last_val < -self.NUM_STD_TO_ENTER * resid_std:
             for i, e in enumerate(resid_out):
                 if e < -self.NUM_STD_TO_EXIT * resid_std:
-                    return "loss", -abs((e - last_val) / last_val), i
+                    return "win", -abs((e - last_val) / last_val), i
                 if e > 0.0:
-                    return "win", abs((e - last_val) / last_val), i
+                    return "loss", abs((e - last_val) / last_val), i
 
-        if last_val > resid_std:
+        if last_val > self.NUM_STD_TO_ENTER * resid_std:
             for i, e in enumerate(resid_out):
                 if e > self.NUM_STD_TO_EXIT * resid_std:
-                    return "loss", -abs((last_val - e) / last_val), i
+                    return "win", -abs((last_val - e) / last_val), i
                 if e < 0.0:
-                    return "win", abs((last_val - e) / last_val), i
+                    return "loss", abs((last_val - e) / last_val), i
 
         return "unkown", 0, 0
 
@@ -328,10 +332,10 @@ class CointegrationPairsFinder:
 
     def send_found_pairs(self, source):
         tb = TelegramBot()
-        tb.send_message("{}: {} pairs found. {} wins, {} losses.".format(source,
-                                                                         self.get_num_pairs(),
-                                                                         self.get_num_wins(),
-                                                                         self.get_num_losses()))
+        tb.send_message("{}: {} pairs found.\n {} wins, {} losses.".format(source,
+                                                                           self.get_num_pairs(),
+                                                                           self.get_num_wins(),
+                                                                           self.get_num_losses()))
 
         if self.create_html:
             for pair in self.pairs:
