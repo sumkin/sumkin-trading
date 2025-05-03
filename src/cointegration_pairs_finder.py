@@ -332,10 +332,10 @@ class CointegrationPairsFinder:
 
     def send_found_pairs(self, source):
         tb = TelegramBot()
-        tb.send_message("{}: {} pairs found.\n {} wins, {} losses.".format(source,
-                                                                           self.get_num_pairs(),
-                                                                           self.get_num_wins(),
-                                                                           self.get_num_losses()))
+        tb.send_message("{}: {} pairs found.\n{} wins, {} losses.".format(source,
+                                                                          self.get_num_pairs(),
+                                                                          self.get_num_wins(),
+                                                                          self.get_num_losses()))
 
         if self.create_html:
             for pair in self.pairs:
