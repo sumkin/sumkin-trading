@@ -4,7 +4,7 @@ from datetime import datetime
 class TradesDbManager:
 
     def __init__(self):
-        self.conn = sqlite3.connect("../data/trades.db")
+        self.conn = sqlite3.connect("/home/sumkin/sumkin-trading/data/trades.db")
         self.cursor = self.conn.cursor()
 
     def is_pair_active(self, symb1, symb2):
@@ -78,7 +78,7 @@ class TradesDbManager:
             v_exit = price2 - hedge * price1 - coeff
         else:
             v_enter = -p2_enter + hedge * p1_enter + coeff
-            v_exit = -price2 + hedge * price2 + coeff
+            v_exit = -price2 + hedge * price1 + coeff
         rtrn = v_exit - v_enter
         rtrn_pct = rtrn / v_enter
 
