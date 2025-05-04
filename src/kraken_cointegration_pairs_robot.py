@@ -7,7 +7,7 @@ from kraken_data_reader import KrakenDataReader
 from cointegration_pairs_finder import CointegrationPairsFinder
 from trades_db_manager import TradesDbManager
 
-def find_pairs():
+def find_pairs_to_enter():
     interval = TimeFrame.INTERVAL_HOUR 
     mins = TimeFrame.get_num_minutes(interval)
     end = datetime.now()
@@ -39,6 +39,42 @@ def find_pairs():
 
     return cpf.pairs, cpf.pairs_info
 
+def find_pairs_to_exit():
+    interval = TimeFrame.INTERVAL_5_MIN
+    kdr = KrakenDataReader()
+
+    tdm = TradesDbManager()
+    pairs = tdm.get_active_pairs()
+    for pair in pairs:
+        symb1, symb2 = pair["symb1"], pair["symb2"]
+        price1 = kdr.get_bars_df(symb1, interval, datetime.now() - timedelta(minutes=15))["close"].to_list()[-1]
+        price2 = kdr.get_bars_df(symb2, interval, datetime.now() - timedelta(minutes=15))["close"].to_list()[-1]
+
+        id = pair["id"]
+        hedge = pair["hedge"]
+        coeff = pair["coeff"]
+        sigma = pair["sigma"]
+        side = pair["side"]
+        amnt = pair["amnt"]
+
+        resid = price2 - hedge * price1 - coeff
+        if side == "BUY":
+            if resid < 0:
+                exit_position(id, price1, price2)
+            elif resid > CointegrationPairsFinder.NUM_STD_TO_EXIT * sigma:
+                exit_position(id, price1, price2)
+            else:
+                pass
+        elif side == "SELL":
+            if resid > 0:
+                exit_position(id, price1, price2)
+            elif resid < -CointegrationPairsFinder.NUM_STD_TO_EXIT * sigma:
+                exit_position(id, price1, price2)
+            else:
+                pass
+        else:
+            assert False
+
 def enter_position(pair, pair_info):
     symb1, symb2 = pair
     sigma = pair_info["resid_std"]
@@ -60,9 +96,18 @@ def enter_position(pair, pair_info):
             if not tdm.is_pair_active(symb1, symb2):
                 tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "SELL", 1.0, p1, p2)
 
+def exit_position(id, price1, price2):
+    tdm = TradesDbManager()
+    tdm.close_trade(id, price1, price2)
+
 if __name__ == "__main__":
-    pairs, pairs_info = find_pairs()
+    """
+    pairs, pairs_info = find_pairs_to_enter()
     assert len(pairs) == len(pairs_info)
     n = len(pairs)
     for i in range(n):
-        entered = enter_position(pairs[i], pairs_info[i])
+        pair = pairs[i]
+        pair_info = pairs_info[i]
+        enter_position(pair, pair_info)
+    """
+    find_pairs_to_exit()
