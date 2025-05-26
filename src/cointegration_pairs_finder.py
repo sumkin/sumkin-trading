@@ -120,8 +120,8 @@ class CointegrationPairsFinder:
                 df = df[["datetime", "volume1", "volume2", "close1", "close2"]]
 
                 # Split dataframe in-sample (is) and out-of-sample (os).
-                df_is = df[:int(df.shape[0] * 0.75)]
-                df_os = df[int(df.shape[0]  * 0.75):]
+                df_is = df[:int(df.shape[0] * 0.75)].copy()
+                df_os = df[int(df.shape[0]  * 0.75):].copy()
 
                 cpc = CointegrationPairChecker(df_is, self.params)
                 res, hedge_ratio, intercept, resid, info = cpc.cointegrate()

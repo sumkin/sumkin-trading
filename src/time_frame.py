@@ -35,5 +35,18 @@ class TimeFrame:
             return 120
         elif tf == TimeFrame.INTERVAL_DAY:
             return 1440
+        else:
+            assert False
 
-
+    @staticmethod
+    def get_resolution(tf):
+        if tf == TimeFrame.INTERVAL_1_MIN:
+            return "1m"
+        elif tf == TimeFrame.INTERVAL_5_MIN:
+            return "5m"
+        elif tf == TimeFrame.INTERVAL_15_MIN:
+            return "15m"
+        elif tf == TimeFrame.INTERVAL_HOUR:
+            return "1h"
+        else:
+            assert False

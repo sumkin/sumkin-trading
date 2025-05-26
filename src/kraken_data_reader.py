@@ -36,8 +36,9 @@ class KrakenDataReader(DataReader):
             "volume": []
         }
 
-        interval = TimeFrame.get_num_minutes(tf)
-        url = "https://api.kraken.com/0/public/OHLC?pair={}&interval={}&since={}".format(ticker, interval, start_ts)
+        resolution = TimeFrame.get_resolution(tf)
+        url = "https://futures.kraken.com/api/charts/v1/trade/{}/{}?from={}".format(ticker, resolution, start_ts)
+
         payload = {}
         headers = {
             "Accept": "application/json",
@@ -53,23 +54,23 @@ class KrakenDataReader(DataReader):
                 pass
             time.sleep(3)
         assert response is not None
-        if ticker in json.loads(response.text)["result"].keys():
-            data = json.loads(response.text)["result"][ticker]
-            for d in data:
-                if d[0] > end_ts:
-                    continue
-                dt = datetime.fromtimestamp(d[0])
-                open = float(d[1])
-                high = float(d[2])
-                low = float(d[3])
-                close = float(d[4])
-                volume = float(d[6])
-                res_data["datetime"].append(dt)
-                res_data["open"].append(open)
-                res_data["high"].append(high)
-                res_data["low"].append(low)
-                res_data["close"].append(close)
-                res_data["volume"].append(volume)
+        data = json.loads(response.text)["candles"]
+        for d in data:
+            d["time"] = d["time"] / 1000 # returns milliseconds.
+            if d["time"] > end_ts:
+                continue
+            dt = datetime.fromtimestamp(d["time"])
+            open = float(d["open"])
+            high = float(d["high"])
+            low = float(d["low"])
+            close = float(d["close"])
+            volume = float(d["volume"])
+            res_data["datetime"].append(dt)
+            res_data["open"].append(open)
+            res_data["high"].append(high)
+            res_data["low"].append(low)
+            res_data["close"].append(close)
+            res_data["volume"].append(volume)
         res_df = pd.DataFrame(data=res_data)
         return res_df
 
