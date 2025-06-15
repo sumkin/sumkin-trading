@@ -35,18 +35,14 @@ class KrakenCashAndCarryArbitrageFinder:
 
         tickers = self.get_tickers()
         for ticker in tickers:
-            bid_price, bid_num, _ = kdr.get_best_bid(ticker[0], market="spot")
+            bid_price, bid_vol,  = kdr.get_best_bid(ticker[0], market="spot")
             if bid_price is None:
                 continue
-            ask_price, ask_num = kdr.get_best_ask(ticker[1], market="futures")
+            ask_price, ask_vol = kdr.get_best_ask(ticker[1], market="futures")
             if ask_price is None:
                 continue
-            bid_price = float(bid_price)
-            ask_price = float(ask_price)
-            bid_num = float(bid_num)
-            ask_num = float(ask_num)
             if bid_price > ask_price:
-                vol = min(bid_num, ask_num)
+                vol = min(bid_vol, ask_vol)
                 deal = bid_price * vol
                 profit = (bid_price - ask_price) * vol
                 print(ticker)

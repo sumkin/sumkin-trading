@@ -162,42 +162,37 @@ class KrakenDataReader(DataReader):
 
     def get_order_book(self, pair, count, market="spot"):
         if market == "spot":
-            # API endpoint for order book data
             url = "https://api.kraken.com/0/public/Depth"
-
-            # Parameters for the request
             params = {
                 "pair": pair,
                 "count": count
             }
 
             try:
-                # Make the API request
                 response = requests.get(url, params=params)
-                response.raise_for_status()  # Raise exception for HTTP errors
-
-                # Parse the response
                 data = response.json()
 
-                # Check for errors
                 if data["error"]:
                     print(f"API Error: {data['error']}")
                     return None
 
-                # Extract result for the specified pair
-                # The actual key might vary depending on the pair
                 result_key = list(data["result"].keys())[0]
                 orderbook = data["result"][result_key]
 
-                # Convert to pandas DataFrames for easier analysis (optional)
                 asks_df = pd.DataFrame(orderbook["asks"], columns=["price", "volume", "timestamp"])
                 bids_df = pd.DataFrame(orderbook["bids"], columns=["price", "volume", "timestamp"])
+                asks_df = asks_df[["price", "volume"]]
+                bids_df = bids_df[["price", "volume"]]
+
+                asks_df["price"] = asks_df["price"].astype(float)
+                asks_df["volume"] = asks_df["volume"].astype(float)
+                bids_df["price"] = bids_df["price"].astype(float)
+                bids_df["volume"] = bids_df["volume"].astype(float)
 
                 return {
-                    "asks": orderbook["asks"],
-                    "bids": orderbook["bids"]
+                    "asks": asks_df,
+                    "bids": bids_df
                 }
-
             except requests.exceptions.RequestException as e:
                 print(f"Request Error: {e}")
                 return None
@@ -205,51 +200,30 @@ class KrakenDataReader(DataReader):
                 print(f"Data Processing Error: {e}")
                 return None
         elif market == "futures":
-            # Kraken Futures API endpoint for order book
             url = f"https://futures.kraken.com/derivatives/api/v3/orderbook"
-
-            # Parameters for the request
             params = {
                 "symbol": pair,
                 "depth": count
             }
 
             try:
-                # Make the API request
                 response = requests.get(url, params=params)
-                response.raise_for_status()  # Raise exception for HTTP errors
-
-                # Parse the response
                 data = response.json()
 
-                # Check for successful response
-                if not data.get("result") == "success":
-                    print(f"API Error: {data.get('error', 'Unknown error')}")
-                    return None
-
-                # Extract orderbook data
                 orderbook = data.get("orderBook", {})
 
-                # Convert to pandas DataFrames for easier analysis
-                if "asks" in orderbook and "bids" in orderbook:
-                    # Futures orderbook format is typically [price, quantity]
-                    asks_df = pd.DataFrame(orderbook["asks"], columns=["price", "quantity"])
-                    bids_df = pd.DataFrame(orderbook["bids"], columns=["price", "quantity"])
+                asks_df = pd.DataFrame(orderbook["asks"], columns=["price", "volume"])
+                bids_df = pd.DataFrame(orderbook["bids"], columns=["price", "volume"])
 
-                    # Convert string values to float for easier calculation
-                    asks_df["price"] = asks_df["price"].astype(float)
-                    asks_df["quantity"] = asks_df["quantity"].astype(float)
-                    bids_df["price"] = bids_df["price"].astype(float)
-                    bids_df["quantity"] = bids_df["quantity"].astype(float)
+                asks_df["price"] = asks_df["price"].astype(float)
+                asks_df["volume"] = asks_df["volume"].astype(float)
+                bids_df["price"] = bids_df["price"].astype(float)
+                bids_df["volume"] = bids_df["volume"].astype(float)
 
-                    return {
-                        "asks": orderbook["asks"],
-                        "bids": orderbook["bids"]
-                    }
-                else:
-                    print("Unexpected orderbook format")
-                    return None
-
+                return {
+                    "asks": asks_df,
+                    "bids": bids_df
+                }
             except requests.exceptions.RequestException as e:
                 print(f"Request Error: {e}")
                 return None
@@ -262,16 +236,16 @@ class KrakenDataReader(DataReader):
     def get_best_bid(self, pair, market="spot"):
         res = self.get_order_book(pair, 10, market=market)
         bids = res["bids"]
-        if len(bids) == 0:
-            return None, None, None
-        return bids[0]
+        if bids.shape[0] == 0:
+            return None, None
+        return bids.iloc[0]
 
     def get_best_ask(self, pair, market="spot"):
         res = self.get_order_book(pair, 10, market=market)
         asks = res["asks"]
-        if len(asks) == 0:
+        if asks.shape[0] == 0:
             return None, None
-        return asks[0]
+        return asks.iloc[0]
 
 
 if __name__ == "__main__":
