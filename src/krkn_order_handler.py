@@ -16,15 +16,67 @@ class KrknOrderHandler:
     def __init__(self):
         pass
 
-    def open_order(self):
-        response = request(
+    def add_buy_market_order(self, symb, amnt):
+        response = self._request(
+            method="POST",
+            path="/0/private/AddOrder",
+            body={
+                "ordertype": "market",
+                "type": "buy",
+                "volume": amnt,
+                "pair": symb
+            },
+            public_key=KRAKEN_API_KEY,
+            private_key=KRAKEN_PRIVATE_KEY,
+            environment="https://api.kraken.com",
+        )
+        return response.read().decode()
+
+    def add_sell_market_order(self, symb, amnt):
+        response = self._request(
+            method="POST",
+            path="/0/private/AddOrder",
+            body={
+                "ordertype": "market",
+                "type": "sell",
+                "volume": amnt,
+                "pair": symb
+            },
+            public_key=KRAKEN_API_KEY,
+            private_key=KRAKEN_PRIVATE_KEY,
+            environment="https://api.kraken.com"
+        )
+        return response.read().decode()
+
+    def get_account_balance(self):
+        response = self._request(
+            method="POST",
+            path="/0/private/Balance",
+            public_key=KRAKEN_API_KEY,
+            private_key=KRAKEN_PRIVATE_KEY,
+            environment="https://api.kraken.com",
+        )
+        print(response.read().decode())
+
+    def get_open_orders(self):
+        response = self._request(
             method="POST",
             path="/0/private/OpenOrders",
             public_key=KRAKEN_API_KEY,
             private_key=KRAKEN_PRIVATE_KEY,
             environment="https://api.kraken.com",
         )
-        print(response.read().decode())
+        return response.read().decode()
+
+    def cancel_all_orders(self):
+        response = self._request(
+            method="POST",
+            path="/0/private/CancelAll",
+            public_key=KRAKEN_API_KEY,
+            private_key=KRAKEN_PRIVATE_KEY,
+            environment="https://api.kraken.com",
+        )
+        return response.read().decode()
 
     def _request(self,
                  method: str = "GET",
@@ -87,6 +139,15 @@ class KrknOrderHandler:
 
 if __name__ == "__main__":
     koh = KrknOrderHandler()
-
-
+    res = koh.add_sell_market_order("TRXUSD", 20)
+    print(res)
+    #add_order = koh.add_order("TRXUSD", 20)
+    #print(add_order)
+    #account_balance = koh.get_account_balance()
+    #print("account_balance")
+    #print(account_balance)
+    #print("")
+    #cancel_all_orders = koh.cancel_all_orders()
+    #print("cancel_all_orders")
+    #print(cancel_all_orders)
 
