@@ -8,11 +8,14 @@ def create_cca_database():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         spot_ticker TEXT NOT NULL,
         futures_ticker TEXT NOT NULL,
-        bid REAL,
-        ask REAL,
+        spot_price_enter REAL,
+        futures_price_enter REAL,
+        spot_price_exit REAL,
+        futures_price_exit REAL,
         vol REAL,
         enter_dt TEXT,
-        exit_dt TEXT)
+        exit_dt TEXT,
+        active INTEGER)
     '''
     cursor.execute(q)
     conn.commit()
