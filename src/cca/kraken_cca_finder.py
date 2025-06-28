@@ -3,7 +3,7 @@ from kraken_data_reader import KrakenDataReader
 
 KRAKEN_COMMISSION=0.30
 
-class KrakenCashAndCarryArbitrageFinder:
+class KrakenCCAFinder:
 
     def __init__(self):
         pass
@@ -46,5 +46,5 @@ class KrakenCashAndCarryArbitrageFinder:
 
 
 if __name__ == "__main__":
-    kccaf = KrakenCashAndCarryArbitrageFinder()
+    kccaf = KrakenCCAFinder()
     kccaf.find()

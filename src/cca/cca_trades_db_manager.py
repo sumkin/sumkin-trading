@@ -15,28 +15,34 @@ class CCATradesDbManager:
         self.cursor.execute(q)
         self.conn.commit()
         res = self.cursor.fetchall()
-        if len(res) == 0:
+        assert len(res) == 1
+        res = res[0]
+
+        if res[0] == 0:
             return False
-        elif len(res) == 1:
-            assert res[0][0] == 1
+        elif res[0] == 1:
             return True
         else:
+            print(res)
             assert False
 
     def get_active_trades(self):
         q = '''
-        SELECT id, spot_ticker, futures_ticker FROM cca_trades WHERE active = 1
+        SELECT id, spot_ticker, futures_ticker, spot_price_enter, futures_price_enter, vol FROM cca_trades WHERE active = 1
         '''
         self.cursor.execute(q)
         self.conn.commit()
-        pairs = self.cursor.fetchall()
+        ccas = self.cursor.fetchall()
 
         res = []
-        for pair in pairs:
+        for cca in ccas:
             res.append({
-                "id": pair[0],
-                "spot_ticker": pair[1],
-                "futures_ticker": pair[2]
+                "id": cca[0],
+                "spot_ticker": cca[1],
+                "futures_ticker": cca[2],
+                "spot_price_enter": cca[3],
+                "futures_price_enter": cca[4],
+                "vol": cca[5]
             })
 
         return res
@@ -47,14 +53,14 @@ class CCATradesDbManager:
         INSERT INTO cca_trades
         (spot_ticker, futures_ticker, spot_price_enter, futures_price_enter, vol, enter_dt, active)
         VALUES 
-        ("{}", "{}", {}, {}, {}, {})
+        ("{}", "{}", {}, {}, {}, "{}", {})
         '''.format(spot_ticker, futures_ticker, spot_price_enter, futures_price_enter, vol, enter_dt, 1)
         self.cursor.execute(q)
         self.conn.commit()
 
     def close_trade(self, id, spot_price_exit, futures_price_exit):
         q = '''
-        SELECT * FROMM cca_trades WHERE id = {}
+        SELECT * FROM cca_trades WHERE id = {}
         '''.format(id)
         self.cursor.execute(q)
         self.conn.commit()

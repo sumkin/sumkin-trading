@@ -1,5 +1,4 @@
-import numpy as np
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta
 from time_frame import TimeFrame
 
 from kraken_universe import KrakenUniverse 

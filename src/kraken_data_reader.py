@@ -160,11 +160,11 @@ class KrakenDataReader(DataReader):
     def get_price(self, ticker: str, tf: TimeFrame, dt: datetime):
         return None
 
-    def get_order_book(self, pair, count, market="spot"):
+    def get_order_book(self, ticker, count, market="spot"):
         if market == "spot":
             url = "https://api.kraken.com/0/public/Depth"
             params = {
-                "pair": pair,
+                "pair": ticker,
                 "count": count
             }
 
@@ -202,7 +202,7 @@ class KrakenDataReader(DataReader):
         elif market == "futures":
             url = f"https://futures.kraken.com/derivatives/api/v3/orderbook"
             params = {
-                "symbol": pair,
+                "symbol": ticker,
                 "depth": count
             }
 
@@ -233,15 +233,15 @@ class KrakenDataReader(DataReader):
         else:
             assert False
 
-    def get_best_bid(self, pair, market="spot"):
-        res = self.get_order_book(pair, 10, market=market)
+    def get_best_bid(self, ticker, market="spot"):
+        res = self.get_order_book(ticker, 10, market=market)
         bids = res["bids"]
         if bids.shape[0] == 0:
             return None, None
         return bids.iloc[0]
 
-    def get_best_ask(self, pair, market="spot"):
-        res = self.get_order_book(pair, 10, market=market)
+    def get_best_ask(self, ticker, market="spot"):
+        res = self.get_order_book(ticker, 10, market=market)
         asks = res["asks"]
         if asks.shape[0] == 0:
             return None, None
