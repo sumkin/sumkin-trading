@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("/home/sumkin/sumkin-trading/src")
 
 from kraken_universe import KrakenUniverse
@@ -38,7 +39,8 @@ def find_cca_to_exit():
             spot_profit = (spot_price_exit - spot_price_enter) * vol
             futures_profit = (futures_price_enter - futures_price_exit) * vol
             profit = spot_profit + futures_profit
-            if profit > 0:
+            commission = (spot_price_enter + futures_price_enter + spot_price_exit + futures_price_exit) * vol * 0.003
+            if profit > commission:
                 exit_position(id, spot_price_exit, futures_price_exit)
 
 
