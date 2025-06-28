@@ -1,12 +1,7 @@
-import pytz
-import pandas as pd
-import scipy.stats as stats
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-
-from time_frame import *
 from kraken_universe import KrakenUniverse
 from kraken_data_reader import KrakenDataReader
+
+KRAKEN_COMMISSION=0.30
 
 class KrakenCashAndCarryArbitrageFinder:
 
@@ -45,9 +40,10 @@ class KrakenCashAndCarryArbitrageFinder:
                 vol = min(bid_vol, ask_vol)
                 deal = bid_price * vol
                 profit = (bid_price - ask_price) * vol
-                print(ticker)
-                print("\t", bid_price, ask_price, vol, deal, profit, round(100 * profit / deal, 3), "%")
-                print("")
+                if (100 * profit / deal) > KRAKEN_COMMISSION:
+                    yield ticker[0], ticker[1], bid_price, ask_price, vol
+
+
 
 if __name__ == "__main__":
     kccaf = KrakenCashAndCarryArbitrageFinder()
