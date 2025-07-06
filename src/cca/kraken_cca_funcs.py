@@ -21,9 +21,10 @@ def find_cca_to_enter():
         res.append(e)
     return res
 
-def find_cca_to_exit():
+def find_cca_to_exit(type):
+    assert type == "paper" or type == "real"
     kdr = KrakenDataReader()
-    ccatdm = CCATradesDbManager()
+    ccatdm = CCATradesDbManager(type)
     ccas = ccatdm.get_active_trades()
     for cca in ccas:
         id = cca["id"]
@@ -41,16 +42,16 @@ def find_cca_to_exit():
             profit = spot_profit + futures_profit
             commission = (spot_price_enter + futures_price_enter + spot_price_exit + futures_price_exit) * vol * 0.003
             if profit > commission:
-                exit_position(id, spot_price_exit, futures_price_exit)
+                yield id, spot_price_exit, futures_price_exit
+    return
 
-
-def enter_position(spot_ticker, futures_ticker, spot_price, futures_price, vol):
-    ccatdm = CCATradesDbManager()
+def enter_position_paper(spot_ticker, futures_ticker, spot_price, futures_price, vol):
+    ccatdm = CCATradesDbManager(type="paper")
     if not ccatdm.is_pair_active(spot_ticker, futures_ticker):
         ccatdm.add_trade(spot_ticker, futures_ticker, spot_price, futures_price, vol)
 
-def exit_position(id, spot_price_exit, futures_price_exit):
-    ccatdm = CCATradesDbManager()
+def exit_position_paper(id, spot_price_exit, futures_price_exit):
+    ccatdm = CCATradesDbManager(type="paper")
     ccatdm.close_trade(id, spot_price_exit, futures_price_exit)
 
 
