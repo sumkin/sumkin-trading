@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 sys.path.append("..")
 
-from kraken_api_keys import KRAKEN_API_KEY
+from kraken_api_keys import KRAKEN_SPOT_PUBLIC_KEY
 from data_reader import DataReader
 from kraken_universe import *
 from time_frame import *
@@ -43,7 +43,7 @@ class KrakenDataReader(DataReader):
             payload = {}
             headers = {
                 "Accept": "application/json",
-                "API-Key": KRAKEN_API_KEY
+                "API-Key": KRAKEN_SPOT_PUBLIC_KEY
             }
             response = None
             for i in range(15):

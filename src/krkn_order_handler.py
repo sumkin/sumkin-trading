@@ -9,7 +9,7 @@ import json
 import time
 sys.path.append("..")
 
-from kraken_api_keys import KRAKEN_PRIVATE_KEY, KRAKEN_API_KEY
+from kraken_api_keys import KRAKEN_SPOT_PRIVATE_KEY, KRAKEN_SPOT_PUBLIC_KEY
 
 class KrknOrderHandler:
 
@@ -26,8 +26,8 @@ class KrknOrderHandler:
                 "volume": amnt,
                 "pair": symb
             },
-            public_key=KRAKEN_API_KEY,
-            private_key=KRAKEN_PRIVATE_KEY,
+            public_key=KRAKEN_SPOT_PUBLIC_KEY,
+            private_key=KRAKEN_SPOT_PRIVATE_KEY,
             environment="https://api.kraken.com",
         )
         return response.read().decode()
@@ -42,28 +42,38 @@ class KrknOrderHandler:
                 "volume": amnt,
                 "pair": symb
             },
-            public_key=KRAKEN_API_KEY,
-            private_key=KRAKEN_PRIVATE_KEY,
+            public_key=KRAKEN_SPOT_PUBLIC_KEY,
+            private_key=KRAKEN_SPOT_PRIVATE_KEY,
             environment="https://api.kraken.com"
         )
         return response.read().decode()
 
-    def get_account_balance(self):
-        response = self._request(
-            method="POST",
-            path="/0/private/Balance",
-            public_key=KRAKEN_API_KEY,
-            private_key=KRAKEN_PRIVATE_KEY,
-            environment="https://api.kraken.com",
-        )
-        print(response.read().decode())
+    def get_balance(self, market="spot"):
+        if market == "spot":
+            response = self._request(
+                method="POST",
+                path="/0/private/Balance",
+                public_key=KRAKEN_SPOT_PUBLIC_KEY,
+                private_key=KRAKEN_SPOT_PRIVATE_KEY,
+                environment="https://api.kraken.com",
+            )
+            print(response.read().decode())
+        elif market == "futures":
+            response = self._request(
+                method="GET",
+                path="/derivatives/api/v3/accounts",
+                public_key=KRAKEN_SPOT_PUBLIC_KEY,
+                private_key=KRAKEN_SPOT_PRIVATE_KEY,
+                environment="https://futures.kraken.com",
+            )
+            print(response.read().decode())
 
     def get_open_orders(self):
         response = self._request(
             method="POST",
             path="/0/private/OpenOrders",
-            public_key=KRAKEN_API_KEY,
-            private_key=KRAKEN_PRIVATE_KEY,
+            public_key=KRAKEN_SPOT_PUBLIC_KEY,
+            private_key=KRAKEN_SPOT_PRIVATE_KEY,
             environment="https://api.kraken.com",
         )
         return response.read().decode()
@@ -72,8 +82,8 @@ class KrknOrderHandler:
         response = self._request(
             method="POST",
             path="/0/private/CancelAll",
-            public_key=KRAKEN_API_KEY,
-            private_key=KRAKEN_PRIVATE_KEY,
+            public_key=KRAKEN_SPOT_PUBLIC_KEY,
+            private_key=KRAKEN_SPOT_PRIVATE_KEY,
             environment="https://api.kraken.com",
         )
         return response.read().decode()
@@ -139,11 +149,14 @@ class KrknOrderHandler:
 
 if __name__ == "__main__":
     koh = KrknOrderHandler()
-    res = koh.add_sell_market_order("TRXUSD", 20)
-    print(res)
+    #koh.add_sell_market_order("TRX.F", 0.00005306)
+    koh.get_balance(market="spot")
+    koh.get_balance(market="futures")
+    #res = koh.add_sell_market_order("TRXUSD", 20)
+    #print(res)
     #add_order = koh.add_order("TRXUSD", 20)
     #print(add_order)
-    #account_balance = koh.get_account_balance()
+    #account_balance = koh.get_balance()
     #print("account_balance")
     #print(account_balance)
     #print("")
