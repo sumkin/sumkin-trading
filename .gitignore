@@ -3,3 +3,4 @@
 alpaca_keys.py
 __pycache__
 *.csv.gz
+*.db

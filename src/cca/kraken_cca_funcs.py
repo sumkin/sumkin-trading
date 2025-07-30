@@ -4,6 +4,7 @@ sys.path.append("/home/sumkin/sumkin-trading/src")
 
 from kraken_universe import KrakenUniverse
 from kraken_data_reader import KrakenDataReader
+from krkn_order_handler import KrknOrderHandler
 from kraken_cca_finder import KrakenCCAFinder
 from cca_trades_db_manager import CCATradesDbManager
 
@@ -50,10 +51,18 @@ def enter_position_paper(spot_ticker, futures_ticker, spot_price, futures_price,
     if not ccatdm.is_pair_active(spot_ticker, futures_ticker):
         ccatdm.add_trade(spot_ticker, futures_ticker, spot_price, futures_price, vol)
 
+def enter_position_real(spot_ticker, futures_ticker, spot_price, futures_price, vol):
+    ccatdm = CCATradesDbManager(type="real")
+    if not ccatdm.is_pair_active(spot_ticker, futures_ticker):
+        # Buy vol amount of spot_ticker with spot_price.
+        pass
+
 def exit_position_paper(id, spot_price_exit, futures_price_exit):
     ccatdm = CCATradesDbManager(type="paper")
     ccatdm.close_trade(id, spot_price_exit, futures_price_exit)
 
+def exit_position_real(id, spot_price_exit, futures_price_exit):
+    pass
 
 if __name__ == "__main__":
     res = find_cca_to_exit()

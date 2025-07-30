@@ -7,9 +7,13 @@ import hmac
 import base64
 import json
 import time
+import asyncio
+from kraken.spot import SpotClient
+from kraken.futures import FuturesAsyncClient
 sys.path.append("..")
 
 from kraken_api_keys import KRAKEN_SPOT_PRIVATE_KEY, KRAKEN_SPOT_PUBLIC_KEY
+from kraken_api_keys import KRAKEN_FUTURES_PRIVATE_KEY, KRAKEN_FUTURES_PUBLIC_KEY
 
 class KrknOrderHandler:
 
@@ -50,7 +54,8 @@ class KrknOrderHandler:
 
     def get_balance(self, market="spot"):
         if market == "spot":
-            response = self._request(
+            """
+            response = self._request_spot(
                 method="POST",
                 path="/0/private/Balance",
                 public_key=KRAKEN_SPOT_PUBLIC_KEY,
@@ -58,15 +63,28 @@ class KrknOrderHandler:
                 environment="https://api.kraken.com",
             )
             print(response.read().decode())
+            """
+            client = SpotClient(key=KRAKEN_SPOT_PUBLIC_KEY, secret=KRAKEN_SPOT_PRIVATE_KEY)
+            print(client.request("POST", "/0/private/Balance"))
         elif market == "futures":
-            response = self._request(
+            """
+            response = self._request_futures(
                 method="GET",
                 path="/derivatives/api/v3/accounts",
-                public_key=KRAKEN_SPOT_PUBLIC_KEY,
-                private_key=KRAKEN_SPOT_PRIVATE_KEY,
+                public_key=KRAKEN_FUTURES_PUBLIC_KEY,
+                private_key=KRAKEN_FUTURES_PRIVATE_KEY,
                 environment="https://futures.kraken.com",
             )
             print(response.read().decode())
+            """
+            async def main():
+                client = FuturesAsyncClient(key=KRAKEN_FUTURES_PUBLIC_KEY, secret=KRAKEN_FUTURES_PRIVATE_KEY)
+                try:
+                    response = await client.request("GET", "/derivatives/api/v3/accounts")
+                    print(response)
+                finally:
+                    await client.close()
+            asyncio.run(main())
 
     def get_open_orders(self):
         response = self._request(
@@ -88,14 +106,14 @@ class KrknOrderHandler:
         )
         return response.read().decode()
 
-    def _request(self,
-                 method: str = "GET",
-                 path: str = "",
-                 query: dict | None = None,
-                 body: dict | None = None,
-                 public_key: str = "",
-                 private_key: str = "",
-                 environment: str = "") -> http.client.HTTPResponse:
+    def _request_spot(self,
+                      method: str = "GET",
+                      path: str = "",
+                      query: dict | None = None,
+                      body: dict | None = None,
+                      public_key: str = "",
+                      private_key: str = "",
+                      environment: str = "") -> http.client.HTTPResponse:
 
         def get_nonce() -> str:
             return str(int(time.time() * 1000))
@@ -147,20 +165,53 @@ class KrknOrderHandler:
         )
         return urllib.request.urlopen(req)
 
+    def _request_futures(self,
+                         method: str = "POST",
+                         path: str = "",
+                         body: dict | None = None,
+                         public_key: str = "",
+                         private_key: str = "",
+                         environment: str = "") -> http.client.HTTPResponse:
+        """Separate method for futures API authentication"""
+
+        def get_nonce() -> str:
+            return str(int(time.time() * 1000))
+
+        def get_futures_signature(private_key: str, endpoint: str, nonce: str, postdata: str) -> str:
+            # Kraken futures signature method
+            postdata = endpoint + nonce + postdata
+            encoded = postdata.encode('utf-8')
+            message = hashlib.sha256(encoded).digest()
+
+            mac = hmac.new(base64.b64decode(private_key), message, hashlib.sha512)
+            sigdigest = base64.b64encode(mac.digest())
+            return sigdigest.decode()
+
+        url = environment + path
+        nonce = get_nonce()
+
+        # For futures, body is JSON string, not form data
+        body_str = ""
+        if body is not None and len(body) > 0:
+            body_str = json.dumps(body)
+
+        headers = {
+            "APIKey": public_key,  # Different header name for futures
+            "Nonce": nonce,
+            "Authent": get_futures_signature(private_key, path, nonce, body_str),  # Different header name
+            "Content-Type": "application/json"
+        }
+
+        req = urllib.request.Request(
+            method=method,
+            url=url,
+            data=body_str.encode() if body_str else None,
+            headers=headers,
+        )
+        return urllib.request.urlopen(req)
+
 if __name__ == "__main__":
     koh = KrknOrderHandler()
-    #koh.add_sell_market_order("TRX.F", 0.00005306)
     koh.get_balance(market="spot")
     koh.get_balance(market="futures")
-    #res = koh.add_sell_market_order("TRXUSD", 20)
-    #print(res)
-    #add_order = koh.add_order("TRXUSD", 20)
-    #print(add_order)
-    #account_balance = koh.get_balance()
-    #print("account_balance")
-    #print(account_balance)
-    #print("")
-    #cancel_all_orders = koh.cancel_all_orders()
-    #print("cancel_all_orders")
-    #print(cancel_all_orders)
 
