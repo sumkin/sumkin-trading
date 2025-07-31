@@ -1,4 +1,4 @@
-from kraken_cca_funcs import find_cca_to_enter, enter_position_paper
+from kraken_cca_funcs import find_cca_to_enter, enter_position_real, enter_position_paper
 
 if __name__ == "__main__":
     ccas = find_cca_to_enter()
@@ -10,5 +10,6 @@ if __name__ == "__main__":
         spot_price = cca["spot_price"]
         futures_price = cca["futures_price"]
         vol = cca["vol"]
+        enter_position_real(spot_ticker, futures_ticker, spot_price, futures_price, vol)
         enter_position_paper(spot_ticker, futures_ticker, spot_price, futures_price, vol)
 

@@ -1,7 +1,11 @@
 import sys
-
+from kraken.spot import Trade as SpotTrade
+from kraken.futures import Trade as FuturesTrade
+sys.path.append("/home/sumkin/sumkin-trading")
 sys.path.append("/home/sumkin/sumkin-trading/src")
 
+from kraken_api_keys import KRAKEN_SPOT_PRIVATE_KEY, KRAKEN_SPOT_PUBLIC_KEY
+from kraken_api_keys import KRAKEN_FUTURES_PRIVATE_KEY, KRAKEN_FUTURES_PUBLIC_KEY
 from kraken_universe import KrakenUniverse
 from kraken_data_reader import KrakenDataReader
 from krkn_order_handler import KrknOrderHandler
@@ -43,7 +47,7 @@ def find_cca_to_exit(type):
             profit = spot_profit + futures_profit
             commission = (spot_price_enter + futures_price_enter + spot_price_exit + futures_price_exit) * vol * 0.003
             if profit > commission:
-                yield id, spot_price_exit, futures_price_exit
+                yield id, spot_ticker, futures_ticker, spot_price_exit, futures_price_exit
     return
 
 def enter_position_paper(spot_ticker, futures_ticker, spot_price, futures_price, vol):
@@ -55,14 +59,53 @@ def enter_position_real(spot_ticker, futures_ticker, spot_price, futures_price, 
     ccatdm = CCATradesDbManager(type="real")
     if not ccatdm.is_pair_active(spot_ticker, futures_ticker):
         # Buy vol amount of spot_ticker with spot_price.
-        pass
+        spot_trade = SpotTrade(key=KRAKEN_SPOT_PUBLIC_KEY, secret=KRAKEN_SPOT_PRIVATE_KEY)
+        spot_res = spot_trade.create_order(
+            ordertype="market",
+            volume=vol,
+            side="buy",
+            pair=spot_ticker
+        )
+        print("spot_res = {}".format(spot_res))
 
-def exit_position_paper(id, spot_price_exit, futures_price_exit):
+        # Sell vol amount of futures_ticker with futures_price.
+        futures_trade = FuturesTrade(key=KRAKEN_FUTURES_PUBLIC_KEY, secret=KRAKEN_FUTURES_PRIVATE_KEY)
+        futures_res = futures_trade.create_order(
+            orderType="mkt",
+            size=vol,
+            side="sell",
+            symbol=futures_ticker
+        )
+        print("futures_res = {}".format(futures_res))
+
+def exit_position_paper(id, spot_ticker, futures_ticker, spot_price_exit, futures_price_exit):
     ccatdm = CCATradesDbManager(type="paper")
     ccatdm.close_trade(id, spot_price_exit, futures_price_exit)
 
-def exit_position_real(id, spot_price_exit, futures_price_exit):
-    pass
+def exit_position_real(id, spot_ticker, futures_ticker, spot_price_exit, futures_price_exit):
+    ccatdm = CCATradesDbManager(type="real")
+    info = ccatdm.get_trade_info(id)
+    vol = info["vol"]
+
+    # Sell vol amount of spot_ticker with spot_price_exit.
+    spot_trade = SpotTrade(key=KRAKEN_SPOT_PUBLIC_KEY, secret=KRAKEN_SPOT_PRIVATE_KEY)
+    spot_res = spot_trade.create_order(
+        ordertype="market",
+        volume=vol,
+        side="sell",
+        pair=spot_ticker
+    )
+
+    # Buy vol ammount of futures_ticker with futures_price.
+    futures_trade = FuturesTrade(key=KRAKEN_FUTURES_PUBLIC_KEY, secret=KRAKEN_FUTURES_PRIVATE_KEY)
+    futures_res = futures_trade.create_order(
+        orderType="mkt",
+        size=vol,
+        side="buy",
+        symbol=futures_ticker
+    )
+
+    ccatdm.close_trade(id, spot_price_exit, futures_price_exit)
 
 if __name__ == "__main__":
     res = find_cca_to_exit()

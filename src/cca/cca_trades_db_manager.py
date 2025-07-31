@@ -129,6 +129,27 @@ class CCATradesDbManager:
         self.cursor.execute(q)
         self.conn.commit()
 
+    def get_trade_info(self, id):
+        if self.type == "paper":
+            q = '''
+            SELECT * FROM cca_trades_paper WHERE id = {}
+            '''.format(id)
+        elif self.type == "real":
+            q = '''
+            SELECT vol FROM cca_trades_real WHERE id = {}
+            '''.format(id)
+        else:
+            assert False
+        self.cursor.execute(q)
+        self.conn.commit()
+        res = self.cursor.fetchall()
+        assert len(res) == 1
+
+        info = {
+            "vol": res[0][0]
+        }
+        return info
+
 if __name__ == "__main__":
     ccatdm = CCATradesDbManager(type="paper")
     pairs = ccatdm.get_active_trades()
