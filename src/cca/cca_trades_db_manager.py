@@ -103,7 +103,7 @@ class CCATradesDbManager:
         self.cursor.execute(q)
         self.conn.commit()
         res = self.cursor.fetchall()
-        assert len(res) == 1
+        assert len(res) == 1, "q = {}".format(q)
 
         exit_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if self.type == "paper":
@@ -131,19 +131,15 @@ class CCATradesDbManager:
 
     def get_trade_info(self, id):
         if self.type == "paper":
-            q = '''
-            SELECT * FROM cca_trades_paper WHERE id = {}
-            '''.format(id)
+            q = "SELECT * FROM cca_trades_paper WHERE id = {}".format(id)
         elif self.type == "real":
-            q = '''
-            SELECT vol FROM cca_trades_real WHERE id = {}
-            '''.format(id)
+            q = "SELECT vol FROM cca_trades_real WHERE id = {}".format(id)
         else:
             assert False
         self.cursor.execute(q)
         self.conn.commit()
         res = self.cursor.fetchall()
-        assert len(res) == 1
+        assert len(res) == 1, "q = {}".format(q)
 
         info = {
             "vol": res[0][0]
