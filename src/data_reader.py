@@ -12,3 +12,15 @@ class DataReader(ABC):
     @abstractmethod
     def get_price(self, ticker: str, tf: TimeFrame, dt: datetime):
         pass
+
+    @abstractmethod
+    def get_order_book(self, ticker, count, market="spot"):
+        pass
+
+    @abstractmethod
+    def get_best_bid(self, ticker, market="spoo"):
+        pass
+
+    @abstractmethod
+    def get_best_ask(self, ticker, market="spot"):
+        pass

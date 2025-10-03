@@ -23,17 +23,18 @@ def find_cca_to_enter():
         new_vol = 10 / spot_price
         if new_vol < vol:
             vol = new_vol
-        vol = round(vol, 1)
-        e = {
-            "spot_ticker": spot_ticker,
-            "futures_ticker": futures_ticker,
-            "spot_price": spot_price,
-            "futures_price": futures_price,
-            "vol": vol
-        }
-        res.append(e)
-        if len(res) == 1:
-            break
+        vol = round(vol)
+        if vol > 0:
+            e = {
+                "spot_ticker": spot_ticker,
+                "futures_ticker": futures_ticker,
+                "spot_price": spot_price,
+                "futures_price": futures_price,
+                "vol": vol
+            }
+            res.append(e)
+            if len(res) == 1:
+                break
     return res
 
 def find_cca_to_exit(type):
@@ -45,19 +46,24 @@ def find_cca_to_exit(type):
         id = cca["id"]
         spot_ticker = cca["spot_ticker"]
         futures_ticker = cca["futures_ticker"]
+        logger.info("spot_ticker, futures_ticker: {}, {}".format(spot_ticker, futures_ticker))
         spot_price_enter = cca["spot_price_enter"]
         futures_price_enter = cca["futures_price_enter"]
         vol = cca["vol"]
 
-        spot_price_exit, spot_vol = kdr.get_best_ask(spot_ticker, market="spot")
-        futures_price_exit, futures_vol = kdr.get_best_bid(futures_ticker, market="futures")
-        if min(spot_vol, futures_vol) >= vol:
-            spot_profit = (spot_price_exit - spot_price_enter) * vol
-            futures_profit = (futures_price_enter - futures_price_exit) * vol
-            profit = spot_profit + futures_profit
-            commission = (spot_price_enter + futures_price_enter + spot_price_exit + futures_price_exit) * vol * 0.003
-            if profit > commission:
-                yield id, spot_ticker, futures_ticker, spot_price_exit, futures_price_exit
+        spot_price_exit, spot_vol = kdr.get_best_bid(spot_ticker, market="spot")
+        futures_price_exit, futures_vol = kdr.get_best_ask(futures_ticker, market="futures")
+        logger.info("spot_price_enter, futures_price_enter = {}, {}".format(spot_price_enter, futures_price_enter))
+        logger.info("spot_price_exit, futures_price_exit: {}, {}".format(spot_price_exit, futures_price_exit))
+        logger.info("spot_val, futures_vol, vol = {}, {}, {}".format(spot_vol, futures_vol, vol))
+        spot_profit = (spot_price_exit - spot_price_enter) * vol
+        futures_profit = (futures_price_enter - futures_price_exit) * vol
+        profit = spot_profit + futures_profit
+        commission = (spot_price_enter + futures_price_enter + spot_price_exit + futures_price_exit) * vol * 0.003
+        logger.info("profit, commission = {}, {}".format(profit, commission))
+        logger.info("")
+        if min(spot_vol, futures_vol) >= vol and profit > commission:
+            yield id, spot_ticker, futures_ticker, spot_price_exit, futures_price_exit
     return
 
 def enter_position_paper(spot_ticker, futures_ticker, spot_price, futures_price, vol):
@@ -105,6 +111,10 @@ def enter_position_real(spot_ticker, futures_ticker, spot_price, futures_price, 
             logger.info("Both orders executed.")
             ccatdm.add_trade(spot_ticker, futures_ticker, spot_price, futures_price, vol)
         else:
+            logger.info("spot_order_status = {}".format(spot_order_status))
+            logger.info("futures_order_status = {}".format(futures_order_status))
+            if futures_order_status == "REJECTED":
+                print("futures_res = {}".format(futures_res))
             assert False
     else:
         logger.info("Pair is active.")

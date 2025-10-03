@@ -1,8 +1,6 @@
 import sys
 import pytz
 import time
-import json
-import requests
 import pandas as pd
 from datetime import datetime, timedelta
 sys.path.append("..")
@@ -20,7 +18,7 @@ class KrakenDataReader(DataReader):
     def __init__(self):
         pass
 
-    def get_bars_df(self, ticker: str, tf: TimeFrame, start: datetime, end: datetime = None, market="futures"):
+    def get_bars_df(self, ticker, tf, start, end, market="futures"):
         if market == "futures":
             start_ts = int(start.timestamp())
             if end is None:
@@ -157,7 +155,7 @@ class KrakenDataReader(DataReader):
         else:
             assert False
 
-    def get_price(self, ticker: str, tf: TimeFrame, dt: datetime):
+    def get_price(self, ticker, tf, dt):
         return None
 
     def get_order_book(self, ticker, count, market="spot"):
@@ -188,6 +186,8 @@ class KrakenDataReader(DataReader):
                 asks_df["volume"] = asks_df["volume"].astype(float)
                 bids_df["price"] = bids_df["price"].astype(float)
                 bids_df["volume"] = bids_df["volume"].astype(float)
+
+                bids_df = bids_df.sort_values("price", ascending=False)
 
                 return {
                     "asks": asks_df,
@@ -220,6 +220,8 @@ class KrakenDataReader(DataReader):
                 bids_df["price"] = bids_df["price"].astype(float)
                 bids_df["volume"] = bids_df["volume"].astype(float)
 
+                bids_df = bids_df.sort_values("price", ascending=False)
+
                 return {
                     "asks": asks_df,
                     "bids": bids_df
@@ -246,7 +248,6 @@ class KrakenDataReader(DataReader):
         if asks.shape[0] == 0:
             return None, None
         return asks.iloc[0]
-
 
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")

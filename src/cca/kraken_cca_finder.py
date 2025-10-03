@@ -1,7 +1,7 @@
 from kraken_universe import KrakenUniverse
 from kraken_data_reader import KrakenDataReader
 
-KRAKEN_COMMISSION=0.30
+KRAKEN_COMMISSION=0.1
 
 class KrakenCCAFinder:
 
@@ -30,20 +30,19 @@ class KrakenCCAFinder:
 
         tickers = self.get_tickers()
         for ticker in tickers:
-            bid_price, bid_vol,  = kdr.get_best_bid(ticker[0], market="spot")
-            if bid_price is None:
-                continue
-            ask_price, ask_vol = kdr.get_best_ask(ticker[1], market="futures")
+            ask_price, ask_vol  = kdr.get_best_ask(ticker[0], market="spot")
             if ask_price is None:
                 continue
+            bid_price, bid_vol = kdr.get_best_bid(ticker[1], market="futures")
+            if bid_price is None:
+                continue
             if bid_price > ask_price:
-                vol = min(bid_vol, ask_vol)
+                vol = min(ask_vol, bid_vol)
                 deal = bid_price * vol
                 profit = (bid_price - ask_price) * vol
-                if (100 * profit / deal) > KRAKEN_COMMISSION:
-                    yield ticker[0], ticker[1], bid_price, ask_price, vol
-
-
+                return_pct = 100 * profit / deal
+                if return_pct > KRAKEN_COMMISSION:
+                    yield ticker[0], ticker[1], ask_price, bid_price, vol
 
 if __name__ == "__main__":
     kccaf = KrakenCCAFinder()

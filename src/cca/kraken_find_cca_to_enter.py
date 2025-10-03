@@ -16,8 +16,8 @@ if __name__ == "__main__":
         futures_price = cca["futures_price"]
         vol = cca["vol"]
         logger.info("{}-{} {}-{}, {}".format(spot_ticker, futures_ticker, spot_price, futures_price, vol))
-        logger.info("Entering real position...")
-        enter_position_real(spot_ticker, futures_ticker, spot_price, futures_price, vol)
+        #logger.info("Entering real position...")
+        #enter_position_real(spot_ticker, futures_ticker, spot_price, futures_price, vol)
         logger.info("Entering paper position...")
         enter_position_paper(spot_ticker, futures_ticker, spot_price, futures_price, vol)
 
