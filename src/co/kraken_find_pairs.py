@@ -1,8 +1,8 @@
-import pytz
-import numpy as np
+import sys
 from datetime import datetime, timedelta
-from time_frame import TimeFrame
+sys.path.append("/home/sumkin/sumkin-trading/src/")
 
+from time_frame import TimeFrame
 from kraken_universe import KrakenUniverse
 from kraken_data_reader import KrakenDataReader
 from cointegration_pairs_finder import CointegrationPairsFinder

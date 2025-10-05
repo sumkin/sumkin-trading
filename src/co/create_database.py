@@ -1,7 +1,7 @@
 import sqlite3 
 
 def create_cointegration_pair_trades_table():
-    conn = sqlite3.connect("../data/trades.db")
+    conn = sqlite3.connect("/home/sumkin/sumkin-trading/data/trades.db")
     cursor = conn.cursor()
     q = '''CREATE TABLE IF NOT EXISTS cointegration_pair_trades ( 
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

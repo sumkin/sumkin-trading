@@ -1,7 +1,9 @@
+import sys
 from datetime import datetime, timedelta
-from time_frame import TimeFrame
 
-from kraken_universe import KrakenUniverse 
+sys.path.append("/home/sumkin/sumkin-trading/src/")
+from time_frame import TimeFrame
+from kraken_universe import KrakenUniverse
 from kraken_data_reader import KrakenDataReader 
 from cointegration_pairs_finder import CointegrationPairsFinder
 from trades_db_manager import TradesDbManager
@@ -46,8 +48,8 @@ def find_pairs_to_exit():
     pairs = tdm.get_active_pairs()
     for pair in pairs:
         symb1, symb2 = pair["symb1"], pair["symb2"]
-        price1 = kdr.get_bars_df(symb1, interval, datetime.now() - timedelta(minutes=15))["close"].to_list()[-1]
-        price2 = kdr.get_bars_df(symb2, interval, datetime.now() - timedelta(minutes=15))["close"].to_list()[-1]
+        price1 = kdr.get_bars_df(symb1, interval, datetime.now() - timedelta(minutes=15), datetime.now())["close"].to_list()[-1]
+        price2 = kdr.get_bars_df(symb2, interval, datetime.now() - timedelta(minutes=15), datetime.now())["close"].to_list()[-1]
 
         id = pair["id"]
         hedge = pair["hedge"]
