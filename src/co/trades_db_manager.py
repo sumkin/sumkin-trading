@@ -62,7 +62,7 @@ class TradesDbManager:
 
     def close_trade(self, id, price1, price2):
         q = '''
-        SELECT p1_enter, p2_enter, hedge, coeff, side 
+        SELECT p1_enter, p2_enter, hedge, coeff, side, amnt 
         FROM cointegration_pair_trades 
         WHERE id = {}
         '''.format(id)
@@ -71,7 +71,7 @@ class TradesDbManager:
         res = self.cursor.fetchall()
         assert len(res) == 1
 
-        p1_enter, p2_enter, hedge, coeff, side = res[0]
+        p1_enter, p2_enter, hedge, coeff, side, _ = res[0]
         assert side == "BUY" or side == "SELL"
         if side == "BUY":
             v_enter = p2_enter - hedge * p1_enter - coeff

@@ -88,14 +88,15 @@ def enter_position(pair, pair_info):
 
     resid = p2 - hedge * p1 - coeff
     if abs(resid) > CointegrationPairsFinder.NUM_STD_TO_ENTER * sigma:
+        amnt = 1.0 / max(p1, p2)  # Position should be about 1 USD.
         if resid > 0:
             # Buy symb1 and sell symb2.
             if not tdm.is_pair_active(symb1, symb2):
-                tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "BUY", 1.0, p1, p2)
+                tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "BUY", amnt, p1, p2)
         else:
             # Sell symb1 and buy symb2.
             if not tdm.is_pair_active(symb1, symb2):
-                tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "SELL", 1.0, p1, p2)
+                tdm.add_trade(symb1, symb2, hedge, coeff, sigma, "SELL", amnt, p1, p2)
 
 def exit_position(id, price1, price2):
     tdm = TradesDbManager()
