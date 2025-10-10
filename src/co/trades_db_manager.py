@@ -28,7 +28,7 @@ class TradesDbManager:
 
     def get_active_pairs(self):
         q = '''
-        SELECT id, symb1, symb2, hedge, coeff, sigma, side, amnt FROM cointegration_pair_trades WHERE active = 1 
+        SELECT id, symb1, symb2, hedge, coeff, enter_dt, sigma, side, amnt FROM cointegration_pair_trades WHERE active = 1 
         '''
         self.cursor.execute(q)
         self.conn.commit()
@@ -42,9 +42,10 @@ class TradesDbManager:
                 "symb2": pair[2],
                 "hedge": pair[3],
                 "coeff": pair[4],
-                "sigma": pair[5],
-                "side": pair[6],
-                "amnt": pair[7]
+                "enter_dt": pair[5],
+                "sigma": pair[6],
+                "side": pair[7],
+                "amnt": pair[8]
             })
 
         return res

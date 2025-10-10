@@ -54,9 +54,12 @@ def find_pairs_to_exit():
         id = pair["id"]
         hedge = pair["hedge"]
         coeff = pair["coeff"]
+        enter_dt = pair["enter_dt"]
         sigma = pair["sigma"]
         side = pair["side"]
-        amnt = pair["amnt"]
+        trade_length_days = (datetime.now() - datetime.strptime(enter_dt, "%Y-%m-%d %H:%M:%S")).days
+        if trade_length_days >= 1:
+            exit_position(id, price1, price2)
 
         resid = price2 - hedge * price1 - coeff
         if side == "BUY":
