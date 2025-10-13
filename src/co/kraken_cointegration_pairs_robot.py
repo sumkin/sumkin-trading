@@ -41,7 +41,7 @@ def find_pairs_to_enter():
     return cpf.pairs, cpf.pairs_info
 
 def find_pairs_to_exit():
-    interval = TimeFrame.INTERVAL_5_MIN
+    interval = TimeFrame.INTERVAL_1_MIN
     kdr = KrakenDataReader()
 
     tdm = TradesDbManager()
@@ -58,7 +58,7 @@ def find_pairs_to_exit():
         sigma = pair["sigma"]
         side = pair["side"]
         trade_length_days = (datetime.now() - datetime.strptime(enter_dt, "%Y-%m-%d %H:%M:%S")).days
-        if trade_length_days >= 1:
+        if trade_length_days >= 3:
             exit_position(id, price1, price2)
 
         resid = price2 - hedge * price1 - coeff
