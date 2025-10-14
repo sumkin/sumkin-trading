@@ -1,6 +1,5 @@
 import sys
-import json
-import requests
+import ccxt
 
 from defs import ROOT_FOLDER
 sys.path.append(ROOT_FOLDER)
@@ -10,39 +9,29 @@ from universe import Universe
 class KrakenUniverse(Universe):
 
     def __init__(self):
-        pass
+        self.spot_exchange = ccxt.kraken({
+            "apiKey": KRAKEN_SPOT_PUBLIC_KEY,
+            "secret": KRAKEN_SPOT_PRIVATE_KEY
+        })
+        self.futures_exchange = ccxt.krakenfutures({
+            "apiKey": KRAKEN_FUTURES_PUBLIC_KEY,
+            "secret": KRAKEN_FUTURES_PRIVATE_KEY
+        })
 
     def get_tickers(self, market="futures"):
         if market == "futures":
-            url = "https://futures.kraken.com/derivatives/api/v3/instruments"
-            payload = {}
-            headers = {
-                "Accept": "application/json"
-            }
-            response = requests.request("GET", url, headers=headers, data=payload)
-            instruments = json.loads(response.text)["instruments"]
-
+            markets = self.futures_exchange.load_markets()
             res = []
-            for instrument in instruments:
-                symbol = instrument["symbol"]
-                if "PF" in symbol and "USD" in symbol:
-                    res.append(symbol)
+            for symbol in markets.keys():
+                if "PF" in markets[symbol]["id"] and "USD" == markets[symbol]["id"].strip()[-3:]:
+                    res.append(markets[symbol]["id"])
             return res
         elif market == "spot":
-            url = "https://api.kraken.com/0/public/AssetPairs"
-            payload = {}
-            headers = {
-                "Accept": "application/json"
-            }
-            response = requests.request("GET", url, headers=headers, data=payload)
-            pairs = json.loads(response.text)["result"]
-
+            markets = self.spot_exchange.load_markets()
             res = []
-            for pair_name, pair_data in pairs.items():
-                # Filter for USD pairs (includes USD and USDT)
-                if "USD" in pair_name:
-                    res.append(pair_name)
-
+            for symbol in markets.keys():
+                if "USD" == markets[symbol]["id"].strip()[-3:]:
+                    res.append(markets[symbol]["id"])
             return res
         else:
             assert False
