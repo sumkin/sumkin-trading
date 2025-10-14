@@ -72,16 +72,18 @@ class TradesDbManager:
         res = self.cursor.fetchall()
         assert len(res) == 1
 
-        p1_enter, p2_enter, hedge, coeff, side, _ = res[0]
+        p1_enter, p2_enter, hedge, coeff, side, amnt = res[0]
         assert side == "BUY" or side == "SELL"
         if side == "BUY":
             v_enter = p2_enter - hedge * p1_enter - coeff
             v_exit = price2 - hedge * price1 - coeff
+            rtrn = amnt * (v_exit - v_enter)
+            rtrn_pct = rtrn / (amnt * p2_enter + amnt * hedge * price1)
         else:
             v_enter = -p2_enter + hedge * p1_enter + coeff
             v_exit = -price2 + hedge * price1 + coeff
-        rtrn = v_exit - v_enter
-        rtrn_pct = rtrn / v_enter
+            rtrn = amnt * (v_exit - v_enter)
+            rtrn_pct = rtrn / (amnt * hedge * p1_enter + amnt * price2)
 
         exit_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         q = '''
