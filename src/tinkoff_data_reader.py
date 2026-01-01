@@ -87,8 +87,6 @@ class TinkoffDataReader(DataReader):
                 figi=instrument_id,
                 depth=count
             )
-            print(orderbook)
-        assert False
 
     def get_best_ask(self, ticker, market="spot"):
         assert False
