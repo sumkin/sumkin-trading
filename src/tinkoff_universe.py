@@ -16,7 +16,7 @@ class TinkoffUniverse(Universe):
         pass
 
     def get_tickers(self):
-        with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+        with Client(tinkoff_token, target=INVEST_GRPC_API_SANDBOX) as client:
             instruments = client.instruments
             res = []
             for item in instruments.shares().instruments:
@@ -33,7 +33,7 @@ class TinkoffUniverse(Universe):
 
         for _ in range(5):
             try:
-                with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+                with Client(tinkoff_token, target=INVEST_GRPC_API_SANDBOX) as client:
                     instruments = client.instruments
                     for item in instruments.shares().instruments:
                         if item.ticker == ticker:

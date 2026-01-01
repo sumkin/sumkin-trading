@@ -30,7 +30,13 @@ class TinkoffDataReader(DataReader):
             "close": [],
             "volume": []
         }
-        with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+        with Client(tinkoff_token, target=INVEST_GRPC_API_SANDBOX) as client:
+            orderbook = client.market_data.get_order_book(
+                figi=instrument_id,
+                depth=20  # глубина стакана (1-50)
+            )
+            print(orderbook)
+            assert False
             NUM_ATTEMPTS = 5
             for _ in range(NUM_ATTEMPTS):
                 try:
@@ -61,7 +67,7 @@ class TinkoffDataReader(DataReader):
 
     def get_price(self, ticker: str, tf: TimeFrame, dt: datetime):
         instrument_id = TinkoffUniverse.get_figi_by_ticker(ticker)
-        with Client(tinkoff_sandbox_token, target=INVEST_GRPC_API_SANDBOX) as client:
+        with Client(tinkoff_token, target=INVEST_GRPC_API_SANDBOX) as client:
             candles = client.get_all_candles(instrument_id=instrument_id,
                                              from_=dt,
                                              to=dt,
@@ -71,11 +77,30 @@ class TinkoffDataReader(DataReader):
             candle = list(candles)[0]
             return float(str(candle.close.units) + "." + str(candle.close.nano))
 
+    def get_best_bid(self, ticker, market="spot"):
+        assert False
+
+    def get_order_book(self, ticker, count, market="spot"):
+        instrument_id = TinkoffUniverse.get_figi_by_ticker(ticker)
+        with Client(tinkoff_token, target=INVEST_GRPC_API_SANDBOX) as client:
+            orderbook = client.market_data.get_order_book(
+                figi=instrument_id,
+                depth=count
+            )
+            print(orderbook)
+        assert False
+
+    def get_best_ask(self, ticker, market="spot"):
+        assert False
+
 if __name__ == "__main__":
     tz = pytz.timezone("UTC")
     start = datetime.now() - timedelta(days=365)
     start = tz.localize(start)
 
+    tdr = TinkoffDataReader()
+    tdr.get_order_book("SBER", 50)
+    """
     tu = TinkoffUniverse()
     tickers = tu.get_tickers()
     for ticker in tickers:
@@ -84,5 +109,6 @@ if __name__ == "__main__":
         df = tdr.get_bars_df(ticker, TimeFrame.INTERVAL_HOUR, start)
         print(df.head(5))
         print(df.tail(5))
+    """
 
 
